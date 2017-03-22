@@ -26,7 +26,7 @@ This Component supports exporting loading and executing queries against Teradata
 
 #### Description:
 
- SQLExecute task is used execute arbitary DML statements against a database
+ SQLExecute task is used execute arbitrary DML/DDL statements against a database
 
 #### Configuration Structure:
 
@@ -83,7 +83,7 @@ This Component supports exporting loading and executing queries against Teradata
 
  
 SQLRead task runs a select query and parse the first row as a Hocon Config.
-The query must be select query and not any DML or DDL statements.
+The query must be a SELECT query and not any DML or DDL statements.
 The configuration object is shown below.
     
 
@@ -187,7 +187,7 @@ the configuration object for this task is as shown below.
  * destination-table: destination table to load
  * location: path pointing to the source file
  * load:
-    * skip-lines: number of lines to skip in he table
+    * skip-lines: number of lines to skip
     * quotechar: character to be used for quoting
     * bulk-threshold: size of the source file(s) above which fastload mode will be selected if auto mode is enabled
     * truncate: truncate the target table before loading data
@@ -306,7 +306,7 @@ The typical task SQLExport configuration is as shown below
 
 #### Description:
 
- 
+ ExportToHDFS is used to export SQL query results to a HDFS file
 
 #### Configuration Structure:
 
@@ -394,7 +394,7 @@ The typical task SQLExport configuration is as shown below
 
 #### Description:
 
- 
+ LoadFromHDFS can be used to load file(s) from a HDFS path
 
 #### Configuration Structure:
 
@@ -440,7 +440,7 @@ The typical task SQLExport configuration is as shown below
  * dsn: either a name of the dsn or a config-object with username/password and other credentials
  * destination-table: destination table to load
  * load:
-    * skip-lines: number of lines to skip in he table
+    * skip-lines: number of lines to skip
     * quotechar: character to be used for quoting
     * bulk-threshold: size of the source file(s) above which fastload mode will be selected if auto mode is enabled
     * truncate: truncate the target table before loading data
@@ -460,7 +460,7 @@ The typical task SQLExport configuration is as shown below
         * bzip2
         * default
     * cli-mode: boolean field to indicate if the local installed hadoop shell utility should be used to read data
-    * cli-binary: hadoop binary to be used for reading. usually its either hadoop or hdfs. this field is relevant when cli-mode field is set to yes
+    * cli-binary: hadoop binary to be used for reading. usually it's either hadoop or HDFS. this field is relevant when cli-mode field is set to yes
 
 #### Task Output:
 
@@ -492,7 +492,7 @@ The typical task SQLExport configuration is as shown below
 
  
  This task is used to load data to Teradata from HDFS/Hive. The hadoop task nodes directly connect to Teradata nodes (AMPs)
- and the data from hadoop is loaded to Teradata with map reduce jobs processing the data in hadoop and transferring
+ and the data from hadoop is loaded to Teradata with map-reduce jobs processing the data in hadoop and transferring
  them over to Teradata. Preferred method of transferring large volume of data between Hadoop and Teradata.
 
  This requires TDCH library to be installed on the local machine. The **source-type** can be either *hive* or *hdfs.*
@@ -501,7 +501,7 @@ The typical task SQLExport configuration is as shown below
 
 ###### batch.insert:
   Data is loaded via normal connections. No loader slots in Terdata are taken. This is ideal for loading few million
-  rows of data. The major dis-advantage of this mode is that this mode has zero tolerance for rejects. so even if
+  rows of data. The major disadvantage of this mode is that this mode has zero tolerance for rejects. so even if
   a single record is rejected the entire job fails.
 
 ###### fastload:
@@ -599,7 +599,7 @@ To use hive as a target the field **tdch-settings.libjars** must be set with all
     * misc-options: other TDHC arguments to be appended must be defined in this Config object
     * tdch-jar: path to tdch jar file
     * queue-name: scheduler queue where the MR job is submitted
-    * num-mappers: num of mappers to be used in the MR job
+    * num-mappers: number of mappers to be used in the MR job
  * source: hdfs path or hive tablename depending on the job-type defined
  * dsn: either a name of the dsn or a config-object with username/password and other credentials
  * truncate: truncate target table before load
@@ -635,7 +635,7 @@ To use hive as a target the field **tdch-settings.libjars** must be set with all
 
  
  Extract data from Teradata to HDFS/Hive. The hadoop task nodes directly connect to Teradata nodes (AMPs)
- and the data from Teradata is loaded to HDFS/Hive with map reduce jobs processing the data in hadoop and extracting
+ and the data from Teradata is loaded to HDFS/Hive with map-reduce jobs processing the data in hadoop and extracting
  them from Teradata. This is the preferred method of transferring large volume of data between Hadoop and Teradata.
 
  This requires TDCH library to be installed on the local machine. The target can be either a random HDFS directory
@@ -733,7 +733,7 @@ To use hive as a target the field **tdch-settings.libjars** must be set with all
     * misc-options: other TDHC arguments to be appended must be defined in this Config object
     * tdch-jar: path to tdch jar file
     * queue-name: scheduler queue where the MR job is submitted
-    * num-mappers: num of mappers to be used in the MR job
+    * num-mappers: number of mappers to be used in the MR job
  * source: defines the source table or query depending on the defined source type
  * dsn: either a name of the dsn or a config-object with username/password and other credentials
  * truncate: if target is HDFS directory it is deleted. If target is a hive table it is dropped and recreated
@@ -828,7 +828,7 @@ To use hive as a target the field **tdch-settings.libjars** must be set with all
  * destination-table: destination table to load
  * location: path pointing to the source file
  * load:
-    * skip-lines: number of lines to skip in he table
+    * skip-lines: number of lines to skip
     * quotechar: character to be used for quoting
     * bulk-threshold: size of the source file(s) above which fastload mode will be selected if auto mode is enabled
     * dtconn-attrs: miscellaneous data-connector operator attributes
@@ -973,7 +973,7 @@ To use hive as a target the field **tdch-settings.libjars** must be set with all
  * dsn: either a name of the dsn or a config-object with username/password and other credentials
  * destination-table: destination table to load
  * load:
-    * skip-lines: number of lines to skip in he table
+    * skip-lines: number of lines to skip
     * quotechar: character to be used for quoting
     * bulk-threshold: size of the source file(s) above which fastload mode will be selected if auto mode is enabled
     * dtconn-attrs: miscellaneous data-connector operator attributes
@@ -995,7 +995,7 @@ To use hive as a target the field **tdch-settings.libjars** must be set with all
         * bzip2
         * default
     * cli-mode: boolean field to indicate if the local installed hadoop shell utility should be used to read data
-    * cli-binary: hadoop binary to be used for reading. usually its either hadoop or hdfs. this field is relevant when cli-mode field is set to yes
+    * cli-binary: hadoop binary to be used for reading. usually it's either hadoop or HDFS. this field is relevant when cli-mode field is set to yes
 
 #### Task Output:
 

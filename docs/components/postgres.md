@@ -143,7 +143,7 @@ the configuration object for this task is as shown below.
  * destination-table: destination table to load
  * location: path pointing to the source file
  * load:
-    * skip-lines: number of lines to skip in he table
+    * skip-lines: number of lines to skip
     * quotechar: character to be used for quoting
     * truncate: truncate the target table before loading data
     * error-tolerance: % of data that is allowable to get rejected value ranges from (0.00 to 1.00)
@@ -182,7 +182,7 @@ the configuration object for this task is as shown below.
 
 #### Description:
 
- SQLExecute task is used execute arbitary DML statements against a database
+ SQLExecute task is used execute arbitrary DML/DDL statements against a database
 
 #### Configuration Structure:
 
@@ -240,7 +240,7 @@ the configuration object for this task is as shown below.
 
  
 SQLRead task runs a select query and parse the first row as a Hocon Config.
-The query must be select query and not any DML or DDL statements.
+The query must be a SELECT query and not any DML or DDL statements.
 The configuration object is shown below.
     
 
@@ -300,7 +300,7 @@ The configuration object is shown below.
 
 #### Description:
 
- 
+ ExportToHDFS is used to export SQL query results to a HDFS file
 
 #### Configuration Structure:
 
@@ -388,7 +388,7 @@ The configuration object is shown below.
 
 #### Description:
 
- 
+ LoadFromHDFS can be used to load file(s) from a HDFS path
 
 #### Configuration Structure:
 
@@ -434,7 +434,7 @@ The configuration object is shown below.
  * dsn: either a name of the dsn or a config-object with username/password and other credentials
  * destination-table: destination table to load
  * load:
-    * skip-lines: number of lines to skip in he table
+    * skip-lines: number of lines to skip
     * quotechar: character to be used for quoting
     * truncate: truncate the target table before loading data
     * error-tolerance: % of data that is allowable to get rejected value ranges from (0.00 to 1.00)
@@ -451,7 +451,7 @@ The configuration object is shown below.
         * bzip2
         * default
     * cli-mode: boolean field to indicate if the local installed hadoop shell utility should be used to read data
-    * cli-binary: hadoop binary to be used for reading. usually its either hadoop or hdfs. this field is relevant when cli-mode field is set to yes
+    * cli-binary: hadoop binary to be used for reading. usually it's either hadoop or HDFS. this field is relevant when cli-mode field is set to yes
 
 #### Task Output:
 

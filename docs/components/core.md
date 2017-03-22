@@ -158,19 +158,19 @@ SFTPTask is used to perform `put` and `get` operations of SFTP.
 
 **PUT:**
 
- The PUT operation will move your file from local system to the SFTP server. The target path can be either the current
+ The PUT operation will move your file from local file-system to the SFTP server. The target path can be either the current
  working directory of SFTP session (which can be set using the setting `remote-dir`) or a user provided path.
- for example in the below setting we are uploading two local files to the SFTP server. The first file `/var/tmp/file1.txt`
+ For example in the below setting we are uploading two local files to the SFTP server. The first file `/var/tmp/file1.txt`
  is uploaded to the SFTP path `/sftp_root_dir/path/file1.txt`. The second local file `/var/tmp/file2.txt` is uploaded
- to the path `/sftp_root_dir/dir1/files/file2.txt` because the current working directory of the SFTP shell is
- `/sftp_root_dir/dir1/files` as set by the `remote_dir`.
+ to the path `/sftp_root_dir/dir1/files/file2.txt` because the current working directory of the SFTP session is
+ `/sftp_root_dir/dir1/files` as set by the `remote_dir` property.
 
       put = [{ "/var/tmp/file1.txt" = /sftp_root_dir/path/file1.txt }, "/var/tmp/file2.txt" ]
       remote_dir = /sftp_root_dir/dir1/files
 
 **GET**:
 
- The GET operation will move files from your SFTP server to your local server. The target path can be either the current
+ The GET operation will move files from your SFTP server to your local file-system. The target path can be either the current
  local working directory (configurable via `local-dir` setting) or the path provided by the user. In the below
  example we move two files `/root_sftp_dir/file1.txt` to local path `/var/tmp/file1.txt` and `/root_sftp_dir/file2.txt`
  to `/var/tmp/file2.txt`
@@ -272,7 +272,7 @@ This task outputs a empty config object
  This will not work if the response of the Rest API call was an json array like `["foo", "bar"]` due to above mentioned reasons.
 
  *allowed-status-codes* field takes a array of integer which represents the list of valid HTTP status code that an
- HTTP call can have. for example if *allowed-status-codes* is set to `[200]` and if a Rest API call returns 404
+ HTTP call can have. For example if *allowed-status-codes* is set to `[200]` and if a Rest API call returns 404
  then the API call is assumed to have failed and hence the task execution is failed.
 
 
