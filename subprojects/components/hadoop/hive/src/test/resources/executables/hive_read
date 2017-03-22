@@ -1,0 +1,2 @@
+#!/bin/sh
+printf "col1\tcol2\n10\txyz"
