@@ -1,0 +1,18 @@
+site_name: Artemisia
+theme: readthedocs
+pages:
+- {Home: index.md}
+- Getting Started:
+  - {Installation: started.md}
+  - {Defining Jobs: concept.md}
+  - {Worklets: worklet.md}
+- Components:
+  - {Hive: components/hive.md}
+  - {MySQL: components/mysql.md}
+  - {Postgres: components/postgres.md}
+  - {Teradata: components/teradata.md}
+  - {Hadoop: components/hadoop.md}
+  - {Core: components/core.md}
+- Examples:
+  - {Mysql: examples/mysql.md}
+  - {Teradata: examples/teradata.md}

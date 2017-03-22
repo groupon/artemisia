@@ -1,0 +1,6 @@
+.DS_Store
+.idea/
+RUNNING_PID
+/logs/
+target/
+site/
