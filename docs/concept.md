@@ -57,21 +57,44 @@
 ## Defining variables 
 
    You can also define variables as shown in the below example with variable `filename`.
-   Please note that the resolution and substitution follows Hocon specification except for the fact that quoted values are also resolved.
-   For example if normal Hocon `{ foo = "${bar}" }` the value of foo remains as `${bar}` since it is quoted.
-   Whereas in the Hocon `{ foo = ${bar}}` the *bar* variable is resolved since it is not quoted.
-   In Artemisia both Hocon configs are resolved. ie even though `${bar}` was quoted the in first case it Artemisia would be resolved.
-
-          {
-             filename = /var/tmp/artemisia/file.txt
-              delete_file = {
-                 Component = FileComponent
-                 Task = DeleteFile
-                 params = {
-                    file = ${filename}
-                }
+   Please note that the resolution and substitution follows Hocon specification except for the fact that quoted string values are also resolved.
+   For example in normal Hocon `{ foo = "${bar}", bar = 10 }` the value of foo remains as `${bar}` even after resolution 
+   since it is a quoted string. Whereas in artemisia foo get resolved to value `10` even though it is quoted.
+   In the below example the variable `foo` was assigned a string value of `bar`. variables can also be assigned numbers, 
+   arrays or objects as shown below for variables `xyz`, `pqr` and `abc` respectively. Here `task1` is not considered as a variable of type object
+   but as an artemisia task definition because its config object value has reserved keys `Component` and `Task`. 
+   Thus make sure these case sensitive reserved words are not used in your variable declarations inside config objects. 
+   One more requirement for variables is that they should not start with a leading and trailing double underscore. This is because Artemisia considers
+   nodes with leading and trailing double underscores as special reserved nodes with special meaning. In the 
+   below example the node `__connections__` will not be considered as a variable of name `__connections__` with a value 
+   of type config object because it is a reserved name for defining connections and it has a leading and trailing underscores in its name. 
+   
+           {
+             __connections__ = {
+               server1 = {
+                  host = server1
+                  username = username
+                  password = password
+                  database = db
+                  port = 3306
+               }
+             }
+             foo = bar
+             xyz = 123
+             pqr = [foo, bar, baz]
+             abc = {
+               foo = bar
+               baz = 10
+             }
+             task1 = {
+               Component = FileComponent
+               Task = DeleteFile
+               params = {
+                 file = /var/tmp/artemisia/file.txt
+               }
+             }
            }
-
+    
 ## Task Structure
 
   Below is the common structure of a task expressed as Hocon config.
@@ -106,12 +129,15 @@
 #### Component: 
    This selects the component of the task. Components encapsulates similar tasks together. For eg the MySQLComponent
    aggregates tasks that loads, export, queries a MySQL database. similarly you can have components for other databases,
-   hadoop, spark etc. The value must be one of the supported component by Artemisia.
+   hadoop, spark etc. The value must be one of the supported component by Artemisia. Run command `artemisia doc` to list 
+   all components supported by Artemisia.
      
      
 #### Task:
    This field selects a task within the previously selected Component.
    It must be one of the task supported by the previously selected Component.
+   Run command `artemisia doc -c <Component Name>` to list all tasks supported by a component.
+   
   
 #### dependencies:
    This field sets the upstream *dependencies* of the current node. The *dependencies* field sometimes takes an object as
@@ -119,9 +145,12 @@
     
     * success: success dependency path. In the above example step2 task can run only if step1a and step1b completes successfully.
     * fail: failure dependency path. In the above example step2 task can run only if tasks step1c and step1d execution fails.
-    * complete: completion dependency path. In the above example step3 can run if step1e and step1f completes irrespective
+    * complete: completion dependency path. In the above example step2 can run if step1e and step1f completes irrespective
       of it succeeding or failing.
       
+    Thus collectively step2 step can run only when step1a and step1b succeeds and step1c and step1d must have failed and step1e 
+    and step1f must have completed ie either succeed or fail. 
+     
     For tasks which has only success dependency path it can use the shortcut as shown below. In this shortcut mode, the
      dependency field will have value of type array instead of object and this array holds the task list for success 
      dependency path (*dependencies.success*).
@@ -134,7 +163,7 @@
   
 #### ignore-error:
    This field takes boolean value (yes, no, true, false). if set to yes the node failure will not stop the entire dag.
-   The current node's failure will be ignore and the next node in the dag will be processed.
+   The current node's failure will be ignore and the subsequent downstream nodes in the dag will be processed.
    
 #### attempts:
    This field decides how many times a node must retry execution upon failure. 
@@ -143,7 +172,7 @@
    This field decides how long a node must wait before a retry.
       
 #### when:
-   This field's value must evaluate as a boolean expression. if the boolean expression evaluates to true the node
+   This field's value must evaluate to a boolean expression. if the boolean expression evaluates to true the node
    is executed else node's execution is skipped.
        
 #### assert:
@@ -170,7 +199,6 @@
 #### params:
    All task specific configuration items goes here. each task will have its unique config object nested inside *params* node.
    
-
 #### define:
    This field is used to define local variables for the task. The scope of the variable defined here is localized to task
    and not available to other tasks. The below step define two local variables *foo* and *bar* which is not available outside

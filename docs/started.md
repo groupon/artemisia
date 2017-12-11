@@ -1,7 +1,7 @@
 # Installation
   
   The application can be distributed as a zip archive. The installation is as simple as downloading the application and
-  edit the PATH variable to include  artemisia binary. You can download the built binary version from the Github repository
+  edit the PATH variable to include  artemisia *bin*. You can download the built binary version from the Github repository
   or you can choose to build your own version if you require any customization especially with versioning of dependencies.
   Follow the below steps to build artemisia by yourself.
   
