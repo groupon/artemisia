@@ -42,14 +42,15 @@ import com.groupon.artemisia.TestSpec
 
 class CommandUtilSpec extends TestSpec {
 
-
   "CommandUtilSpec" must "get executable from path" in {
-    val randomFileInPath = new File(System.getenv("PATH").split(File.pathSeparator).head).list.head
-    CommandUtil.getExecutablePath(randomFileInPath) match {
-      case Some(x) => x.split(File.separatorChar).last must be (randomFileInPath)
-      case None => fail(s"$randomFileInPath was not found in path")
+     if (new File(System.getenv("PATH").split(File.pathSeparator).head).list != null) {
+       val randomFileInPath = new File(System.getenv("PATH").split(File.pathSeparator).head).list.head
+       CommandUtil.getExecutablePath(randomFileInPath) match {
+         case Some(x) => x.split(File.separatorChar).last must be(randomFileInPath)
+         case None => fail(s"$randomFileInPath was not found in path")
+       }
+     }
     }
-  }
 
   it must "must executed command" in {
     TestUtils.runOnPosix {

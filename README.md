@@ -1,6 +1,6 @@
 
-[![Build Status](https://travis-ci.org/rogue-one/artemisia.svg?branch=master)](https://travis-ci.org/rogue-one/artemisia)
-[![Coverage Status](https://coveralls.io/repos/github/rogue-one/artemisia/badge.svg?branch=master)](https://coveralls.io/github/rogue-one/artemisia?branch=master)
+[![Build Status](https://travis-ci.org/groupon/artemisia.svg?branch=master)](https://travis-ci.org/groupon/artemisia)
+[![Coverage Status](https://coveralls.io/repos/github/groupon/artemisia/badge.svg?branch=master)](https://coveralls.io/github/groupon/artemisia?branch=master)
 [![Documentation Status](https://readthedocs.org/projects/artemisia/badge/?version=latest)](http://artemisia.readthedocs.io/en/latest/?badge=latest)
 
 Artemisia
