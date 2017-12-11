@@ -50,7 +50,7 @@ object General {
     "joda-time" % "joda-time" % "2.0",
     "com.typesafe" % "config" % "1.2.1"
   )
-  val crossVersions =  Seq("2.10.6", mainScalaVersion)
+  val crossVersions =  Seq(mainScalaVersion)
 
 
   def settings(module: String, publishable: Boolean = true) = Seq(
