@@ -119,7 +119,7 @@ object HoconConfigEnhancer {
     result.mkString("\n")
   }
 
-  def readFileContent(file: File, reference: Config = TaskContext.payload) = {
+  def readFileContent(file: File, reference: Config = TaskContext.payload): String = {
     val content = scala.io.Source.fromFile(file).mkString
     resolveString(content,reference)
   }

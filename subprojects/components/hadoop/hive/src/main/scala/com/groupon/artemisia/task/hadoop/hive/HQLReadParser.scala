@@ -33,7 +33,7 @@
 package com.groupon.artemisia.task.hadoop.hive
 
 import java.io.OutputStream
-import com.typesafe.config.{ConfigFactory, ConfigValueFactory}
+import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
 import com.groupon.artemisia.inventory.io.OutputLogParser
 
 /**
@@ -53,7 +53,7 @@ class HQLReadParser(stream: OutputStream) extends OutputLogParser(stream) {
     }
   }
 
-  def getData = {
+  def getData: Config = {
     val joined = header.split('\t') zip row.split('\t')
     joined.foldLeft(ConfigFactory.empty()) {
       (carry, input) => carry.withValue(input._1, ConfigValueFactory.fromAnyRef(input._2))

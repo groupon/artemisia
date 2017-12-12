@@ -20,9 +20,15 @@ A component for hive interaction
 #### Description:
 
  
- HQLExecute is used to execute Hive DML/DDL queries (INSERT/CREATE etc). This task can take a HiveServer2 connection
- as input param and execute the query by connecting to the HiveServer2 service. If no connection is provided
- it would use local Hive CLI to execute the query.
+ HQLExecute is used to execute Hive DML/DDL queries (INSERT/CREATE etc).
+ The queries can be executed in three modes set using the **mode** property.
+
+  1. HiveServer2: This uses direct hiveserver2 jdbc connection to execute queries
+  2. Beeline: This uses the Beeline client installed locally to execute queries
+  3. CLI: This uses local hive cli installation to execute queries.
+
+ Hiveserver2 and Beeline modes requires a connection object passed via a **dsn** field.
+ CLI mode doesnt require any dsn connection object.
     
 
 #### Configuration Structure:
@@ -40,6 +46,7 @@ A component for hive interaction
            port = "10000 @default(10000)"
            username = "username @required"
         }
+         mode = "beeline @default(cli) @allowed(cli, beeline, hiveserver2)"
          sql = "DELETE FROM TABLENAME @optional(either this or sqlfile key is required)"
          sqlfile = "/var/tmp/sqlfile.sql @optional(either this or sql key is required)"
       }
@@ -54,6 +61,7 @@ A component for hive interaction
      
  * sql: select query to be run
  * sqlfile: the file containing the query
+ * mode: mode of execution of HQL. three modes are allowed hiveserver2, cli, beeline
 
 #### Task Output:
 
@@ -61,7 +69,7 @@ A component for hive interaction
      {
         taskname =  {
          __stats__ =   {
-           loaded =    {
+           rows-effected =    {
               tablename_1 = 52
               tablename_2 = 100
            }
@@ -166,6 +174,12 @@ Unlike HQLExecute this task requires a HiveServer2 connection and cannot leverag
 The HQLRead task lets you a run a SELECT query which returns a single row. This single row is
 processed back and converted to a JSON/HOCON map object and merged with job context so that values
 are available in the downstream task.
+
+The queries can be executed in three modes set using the **mode** property.
+ 1. HiveServer2: This uses direct hiveserver2 jdbc connection to execute queries
+ 2. Beeline: This uses the Beeline client installed locally to execute queries
+ 3. CLI: This uses local hive cli installation to execute queries.
+
     
 
 #### Configuration Structure:
@@ -182,6 +196,7 @@ are available in the downstream task.
            port = "10000 @default(10000)"
            username = "username @required"
         }
+         mode = "beeline @default(cli) @allowed(cli, beeline, hiveserver2)"
          sql = "SELECT count(*) as cnt from table @optional(either this or sqlfile key is required)"
          sqlfile = "/var/tmp/sqlfile.sql @optional(either this or sql key is required)"
       }

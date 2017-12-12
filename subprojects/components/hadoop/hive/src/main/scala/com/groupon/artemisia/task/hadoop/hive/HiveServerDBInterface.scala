@@ -46,12 +46,27 @@ class HiveServerDBInterface(connectionProfile: DBConnection) extends DBInterface
 
   override def getNewConnection: Connection = {
     Class.forName("org.apache.hive.jdbc.HiveDriver")
-    DriverManager.getConnection(s"jdbc:hive2://${connectionProfile.hostname}:${connectionProfile.port}/${connectionProfile.default_database}"
-    , connectionProfile.username, connectionProfile.password)
+    DriverManager.getConnection(
+      HiveServerDBInterface.makeUrl(connectionProfile),
+      connectionProfile.username,
+      connectionProfile.password
+    )
   }
 
   override def load(tableName: String, inputStream: InputStream, loadSetting: LoadSetting) = ???
 
   override def load(tableName: String, location: URI, loadSetting: LoadSetting): (Long, Long) = ???
+
+}
+
+object HiveServerDBInterface {
+
+  /**
+    * create jdbc url
+    * @param connectionProfile
+    * @return
+    */
+  def makeUrl(connectionProfile: DBConnection) =
+    s"jdbc:hive2://${connectionProfile.hostname}:${connectionProfile.port}/${connectionProfile.default_database}"
 
 }

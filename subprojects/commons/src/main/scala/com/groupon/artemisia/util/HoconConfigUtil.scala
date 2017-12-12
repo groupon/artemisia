@@ -33,9 +33,11 @@
 package com.groupon.artemisia.util
 
 import java.io.File
+
 import com.typesafe.config._
 import org.apache.commons.lang3.StringEscapeUtils
-import com.groupon.artemisia.inventory.exceptions.SettingNotFoundException
+import com.groupon.artemisia.inventory.exceptions.{InvalidSettingException, SettingNotFoundException}
+
 import scala.collection.JavaConverters._
 import scala.concurrent.duration.FiniteDuration
 
@@ -236,6 +238,35 @@ object HoconConfigUtil {
         HoconConfigEnhancer.readFileContent(new File(config.getString(s"$key-file")))
       else
         throw new SettingNotFoundException(s"key $key/$key-file was not found")
+    }
+
+
+    /**
+      * this outputs a Seq of String. the value of this key can either be a
+      * string, array or a file with a optional separator character. the optional
+      * separator character if present will be used to split the content of the file
+      * to generate to Seq[String] to generate the result
+      *
+      * @param key
+      * @param separator
+      * @return
+      */
+    def asInlineArrayOrFile(key: String, separator: Char): Seq[String] = {
+      if (config.hasPath(key)) {
+        // dont make it config.as[String] and if you do
+        // module dependency of project artemisia with all the components
+        // break for some reason... this needs investigation
+        config.getValue("key").valueType() match {
+          case ConfigValueType.STRING => Seq(HoconConfigEnhancer.stripLeadingWhitespaces(config.getString(key)))
+          case ConfigValueType.LIST => config.getStringList(key).asScala
+            .map(HoconConfigEnhancer.stripLeadingWhitespaces)
+          case _ => throw new InvalidSettingException(s"the key $key must either be a string or a list of string")
+        }
+      }
+      else if (config.hasPath(s"$key-file")) {
+        HoconConfigEnhancer.readFileContent(new File(config.getString(s"$key-file"))).split(separator).toSeq
+      }
+       else throw new SettingNotFoundException(s"key $key/$key-file was not found")
     }
 
   }

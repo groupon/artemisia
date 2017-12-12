@@ -37,7 +37,7 @@ object Dependencies {
   val HADOOP_VERSION = "2.7.2"
   val HIVE_SERVER_VERSION = "0.10.0-cdh4.2.0"
 
-  val packageMode = false 
+  val packageMode = true
 
   implicit class ProvidedDependencyHandler(list: Seq[sbt.ModuleID]) {
     def applyScope = list map {

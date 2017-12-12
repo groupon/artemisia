@@ -33,11 +33,13 @@
 package com.groupon.artemisia.task.hadoop.hive
 
 import java.io.OutputStream
+
 import com.groupon.artemisia.core.AppLogger._
 import com.groupon.artemisia.task.TaskContext
 import com.groupon.artemisia.util.CommandUtil._
 import com.groupon.artemisia.util.FileSystemUtil._
 import com.groupon.artemisia.util.Util
+import com.typesafe.config.Config
 
 /**
   * Created by chlr on 8/3/16.
@@ -58,7 +60,7 @@ class HiveCLIInterface(val hive: String, stdout: OutputStream = System.out, stde
     * @param taskName name to be set for the hive mapred job
     * @return resultset of the query with header and first row as Hocon config object
     */
-  def queryOne(hql: String, taskName: String) = {
+  def queryOne(hql: String, taskName: String): Config = {
     info(Util.prettyPrintAsciiBanner(hql,"query"))
     val effectiveHQL =
       s"""set mapred.job.name = $taskName;

@@ -107,7 +107,7 @@ object CommandUtil {
   def obfuscatedCommandString(command: Seq[String], sections: Seq[Int]) = {
     val boolList = for (i <- 1 to command.length) yield { sections contains i }
     command zip boolList map {
-      case (x, true) => "*" * 5
+      case (_, true) => "*" * 5
       case (x, false) => x
     } mkString " "
   }
@@ -134,7 +134,7 @@ object CommandUtil {
     * @param executable executable to search for
     * @return absolute path of executable
     */
-  def getExecutableOrFail(executable: String) = {
+  def getExecutableOrFail(executable: String): String = {
     getExecutablePath(executable) match {
       case Some(exe) => exe
       case None => throw new RuntimeException(s"$executable not found in PATH")

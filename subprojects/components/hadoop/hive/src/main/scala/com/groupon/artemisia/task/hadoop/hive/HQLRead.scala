@@ -32,7 +32,8 @@
 
 package com.groupon.artemisia.task.hadoop.hive
 
-import com.typesafe.config.{Config, ConfigFactory, ConfigValue}
+import com.groupon.artemisia.inventory.exceptions.InvalidSettingException
+import com.typesafe.config.{Config, ConfigFactory, ConfigValue, ConfigValueFactory}
 import com.groupon.artemisia.task.database.DBInterface
 import com.groupon.artemisia.task.settings.DBConnection
 import com.groupon.artemisia.task.{TaskLike, database}
@@ -42,11 +43,14 @@ import com.groupon.artemisia.util.HoconConfigUtil.Handler
 /**
   * Created by chlr on 8/2/16.
   */
-class HQLRead(taskName: String, sql: String, connectionProfile: Option[DBConnection]) extends
-                        database.SQLRead(taskName, sql, connectionProfile.getOrElse(DBConnection.getDummyConnection)) {
+class HQLRead(taskName: String,
+              sql: String,
+              mode: Mode,
+              connectionProfile: Option[DBConnection])
+  extends database.SQLRead(taskName, sql, connectionProfile.getOrElse(DBConnection.getDummyConnection)) {
 
 
-  protected lazy val hiveCli = getExecutablePath("hive") map {
+  protected lazy val hiveCli: HiveCLIInterface = getExecutablePath("hive") map {
     x => new HiveCLIInterface(x)
   } match {
     case Some(x) => x
@@ -58,20 +62,26 @@ class HQLRead(taskName: String, sql: String, connectionProfile: Option[DBConnect
     case None => throw new RuntimeException("HiveServer2 interface being accessed when it is not defined")
   }
 
+  protected lazy val beeLineCli: BeeLineInterface = (getExecutablePath("beeline"), connectionProfile) match {
+    case (Some(path), Some(connection)) =>  new BeeLineInterface(path, connection)
+    case (_, None) => throw new RuntimeException(s"connection field is required for beeline execution")
+    case (None, _) => throw new RuntimeException("beeline tool is not found in the PATH env variable")
+  }
 
-  override def work() = {
-    connectionProfile match {
-      case Some(profile) => super.work()
-      case None => {
-        hiveCli.queryOne(sql, taskName)
-      }
+  override def work(): Config = {
+    (mode, connectionProfile) match {
+      case (HiveServer2, Some(_)) => super.work()
+      case (HiveServer2, None) => throw new InvalidSettingException("HiveServer2 mode requires dsn setting defined")
+      case (Beeline, Some(_)) => beeLineCli.queryOne(sql, taskName)
+      case (Beeline, None) => throw new InvalidSettingException("Beeline mode requires dsn setting defined")
+      case (HiveCLI, _) => hiveCli.queryOne(sql, taskName)
     }
   }
 
 
-  override def teardown() = {
+  override def teardown(): Unit = {
     connectionProfile match {
-      case Some(profile) => super.teardown()
+      case Some(_) => super.teardown()
       case _ => ()
     }
   }
@@ -82,26 +92,33 @@ object HQLRead extends TaskLike {
 
   override def taskName: String = "HQLRead"
 
-  override val defaultConfig: Config = ConfigFactory.empty()
+  override val defaultConfig: Config = ConfigFactory.empty.withValue("mode", ConfigValueFactory.fromAnyRef("cli"))
 
   override def apply(name: String, config: Config) = {
     val sql = config.asInlineOrFile("sql")
     val connection = config.getAs[ConfigValue]("dsn") map DBConnection.parseConnectionProfile
-    new HQLRead(name, sql, connection)
+    new HQLRead(name, sql, Mode(config.as[String]("mode")), connection)
   }
 
-  override val info = database.SQLRead.info
+  override val info: String = database.SQLRead.info
 
   override val desc: String =
     s"""
       |The $taskName task lets you a run a SELECT query which returns a single row. This single row is
       |processed back and converted to a JSON/HOCON map object and merged with job context so that values
       |are available in the downstream task.
+      |
+      |The queries can be executed in three modes set using the **mode** property.
+      | 1. HiveServer2: This uses direct hiveserver2 jdbc connection to execute queries
+      | 2. Beeline: This uses the Beeline client installed locally to execute queries
+      | 3. CLI: This uses local hive cli installation to execute queries.
+      |
     """.stripMargin
 
-  override val paramConfigDoc = database.SQLRead.paramConfigDoc(10000)
+  override val paramConfigDoc: Config = database.SQLRead.paramConfigDoc(10000)
+    .withValue("""mode""", ConfigValueFactory.fromAnyRef("beeline @default(cli) @allowed(cli, beeline, hiveserver2)") )
 
-  override val fieldDefinition = database.SQLRead.fieldDefinition +
+  override val fieldDefinition: Map[String, String] = database.SQLRead.fieldDefinition +
     ("dsn" ->
       """either a name of the dsn or a config-object with username/password and other credentials.
         |This field is optional field and if not provided then task would use the local Hive CLI installation to execute the query
