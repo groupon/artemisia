@@ -200,7 +200,7 @@ the configuration object for this task is as shown below.
            username = "username @required"
         }
          sql = "DELETE FROM TABLENAME @optional(either this or sqlfile key is required)"
-         sqlfile = "/var/tmp/sqlfile.sql @optional(either this or sql key is required)"
+         sql-file = "/var/tmp/sqlfile.sql @optional(either this or sql key is required)"
       }
      }
 
@@ -209,7 +209,7 @@ the configuration object for this task is as shown below.
 
  * dsn: either a name of the dsn or a config-object with username/password and other credentials
  * sql: select query to be run
- * sqlfile: the file containing the query
+ * sql-file: the file containing the query
 
 #### Task Output:
 

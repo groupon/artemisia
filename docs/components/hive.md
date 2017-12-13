@@ -47,9 +47,9 @@ A component for hive interaction
            username = "username @required"
         }
          mode = "beeline @default(cli) @allowed(cli, beeline, hiveserver2)"
-         sql_[1] = "DELETE FROM TABLENAME @optional(either this or sqlfile key is required)"
+         sql-file = "/var/tmp/sqlfile.sql @optional(either this or sql key is required)"
+         sql_[1] = "DELETE FROM TABLENAME @optional(either this or sql-file key is required)"
          sql_[2] = ["DROP TABLE tablename1", "INSERT INTO tablename1 SELECT * FROM tablename2"]
-         sqlfile = "/var/tmp/sqlfile.sql @optional(either this or sql key is required)"
       }
      }
 
@@ -60,8 +60,8 @@ A component for hive interaction
  either a name of the dsn or a config-object with username/password and other credentials.
  This field is optional field and if not provided then task would use the local Hive CLI installation to execute the query
      
- * sql: either an string or an array of SQL.
- * sqlfile: the file containing the query
+ * sql: either a sql string or an array of SQLs.
+ * sql-file: the file containing the queries. each query must be separated by a semicolon and new a line
  * mode: mode of execution of HQL. three modes are allowed hiveserver2, cli, beeline
 
 #### Task Output:

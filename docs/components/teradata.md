@@ -52,7 +52,7 @@ This Component supports exporting loading and executing queries against Teradata
 
  * dsn: either a name of the dsn or a config-object with username/password and other credentials
  * sql: select query to be run
- * sqlfile: the file containing the query
+ * sql-file: the file containing the query
 
 #### Task Output:
 
