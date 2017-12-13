@@ -251,12 +251,12 @@ object HoconConfigUtil {
       * @param separator
       * @return
       */
-    def asInlineArrayOrFile(key: String, separator: Char): Seq[String] = {
+    def asInlineArrayOrFile(key: String, separator: String): Seq[String] = {
       if (config.hasPath(key)) {
         // dont make it config.as[String] and if you do
         // module dependency of project artemisia with all the components
         // break for some reason... this needs investigation
-        config.getValue("key").valueType() match {
+        config.getValue(key).valueType() match {
           case ConfigValueType.STRING => Seq(HoconConfigEnhancer.stripLeadingWhitespaces(config.getString(key)))
           case ConfigValueType.LIST => config.getStringList(key).asScala
             .map(HoconConfigEnhancer.stripLeadingWhitespaces)

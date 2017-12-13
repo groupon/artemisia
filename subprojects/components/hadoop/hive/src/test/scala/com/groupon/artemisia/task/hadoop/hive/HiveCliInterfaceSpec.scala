@@ -44,19 +44,19 @@ class HiveCliInterfaceSpec extends TestSpec {
 
   "HiveCLIInterface" must "execute query and parse result for hive execute classic" in {
     runOnPosix {
-      val task = new HQLExecute("hql_execute", "select * from table", None) {
+      val task = new HQLExecute("hql_execute", Seq("select * from table"), HiveCLI, None) {
         val file = new File(this.getClass.getResource("/executables/hive_execute_classic").getFile)
         file.setExecutable(true)
         override protected lazy val hiveCli = new HiveCLIInterface(file.toString, new NullOutputStream, new NullOutputStream)
       }
       val result = task.execute()
-      result.getInt("hql_execute.__stats__.loaded.test_table") must be (52)
+      result.getInt("hql_execute.__stats__.rows-effected.test_table") must be (52)
     }
   }
 
   it must "execute query and parse result for hive read classic" in {
     runOnPosix {
-      val task = new HQLRead("hql_read", "select * from table", None) {
+      val task = new HQLRead("hql_read", "select * from table", HiveCLI, None) {
         val file = new File(this.getClass.getResource("/executables/hive_read").getFile)
         file.setExecutable(true)
         override protected lazy val hiveCli = new HiveCLIInterface(file.toString, new NullOutputStream, new NullOutputStream)
@@ -69,13 +69,13 @@ class HiveCliInterfaceSpec extends TestSpec {
 
   "HiveCLIInterface" must "execute query and parse result for hive execute yarn" in {
     runOnPosix {
-      val task = new HQLExecute("hql_execute", "select * from table", None) {
+      val task = new HQLExecute("hql_execute", Seq("select * from table"), HiveCLI, None) {
         val file = new File(this.getClass.getResource("/executables/hive_execute_yarn").getFile)
         file.setExecutable(true)
         override protected lazy val hiveCli = new HiveCLIInterface(file.toString, new NullOutputStream, new NullOutputStream)
       }
       val result = task.execute()
-      result.getInt("""hql_execute.__stats__.loaded."chlr_db.test_table"""") must be (1097)
+      result.getInt("""hql_execute.__stats__.rows-effected."chlr_db.test_table"""") must be (1097)
     }
   }
 

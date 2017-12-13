@@ -50,7 +50,7 @@ class HiveComponentSpec extends TestSpec {
          | }
        """.stripMargin
     val task = component.dispatchTask("HQLExecute", "task", config).asInstanceOf[HQLExecute]
-    task.sql must be ("select * from table")
+    task.sql.head must be ("select * from table")
   }
 
   it must "dispatch HQLRead when requested" in {

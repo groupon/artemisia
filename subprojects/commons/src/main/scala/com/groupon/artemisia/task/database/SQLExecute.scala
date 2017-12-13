@@ -94,7 +94,7 @@ object SQLExecute {
        |{
        |  "dsn_[1]" = connection-name
        |  sql = "DELETE FROM TABLENAME @optional(either this or sqlfile key is required)"
-       |  sqlfile =  "/var/tmp/sqlfile.sql @optional(either this or sql key is required)"
+       |  sql-file =  "/var/tmp/sqlfile.sql @optional(either this or sql key is required)"
        |}
      """.stripMargin
     config
@@ -104,7 +104,7 @@ object SQLExecute {
   val fieldDefinition = Map(
     "dsn" -> "either a name of the dsn or a config-object with username/password and other credentials",
     "sql" -> "select query to be run",
-    "sqlfile" -> "the file containing the query"
+    "sql-file" -> "the file containing the query"
   )
 
 

@@ -36,19 +36,19 @@ import com.groupon.artemisia.inventory.exceptions.InvalidSettingException
 import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
 import com.groupon.artemisia.task.database.DBInterface
 import com.groupon.artemisia.task.settings.DBConnection
-import com.groupon.artemisia.task.{TaskLike, database}
+import com.groupon.artemisia.task.{Task, TaskLike, database}
 import com.groupon.artemisia.util.CommandUtil._
 import com.groupon.artemisia.util.HoconConfigUtil.Handler
+import scala.collection.JavaConverters._
 
 /**
   * Created by chlr on 8/1/16.
   */
 
 class HQLExecute(override val taskName: String,
-                 override val sql: String,
+                 val sql: Seq[String],
                  mode: Mode,
-                 connectionProfile: Option[DBConnection])
-    extends database.SQLExecute(taskName, sql, connectionProfile.getOrElse(DBConnection.getDummyConnection)) {
+                 connectionProfile: Option[DBConnection]) extends Task(taskName) {
 
   protected lazy val hiveCli: HiveCLIInterface = getExecutablePath("hive") map {
     x => new HiveCLIInterface(x)
@@ -65,27 +65,31 @@ class HQLExecute(override val taskName: String,
 
   override protected[task] def setup(): Unit = {}
 
-  override lazy val dbInterface: DBInterface = connectionProfile match {
+  lazy val dbInterface: DBInterface = connectionProfile match {
     case Some(profile) => new HiveServerDBInterface(profile)
     case None => throw new RuntimeException("HiveServer2 interface being accessed when it is not defined")
   }
 
   override def work(): Config = {
     (mode, connectionProfile) match {
-      case (HiveServer2, Some(_)) => super.work()
+      case (HiveServer2, Some(_)) => executeQuery
       case (HiveServer2, None) => throw new InvalidSettingException("HiveServer2 mode requires dsn setting defined")
-      case (Beeline, Some(_)) => wrapAsStats(ConfigFactory.empty.withValue("rows-effected", beeLineCli.execute(sql, taskName).root))
+      case (Beeline, Some(_)) => wrapAsStats(ConfigFactory.empty.withValue("rows-effected",
+        beeLineCli.execute(sql.mkString(";\n"), taskName).root))
       case (Beeline, None) => throw new InvalidSettingException("Beeline mode requires dsn setting defined")
-      case (HiveCLI, _) => wrapAsStats(ConfigFactory.empty().withValue("rows-effected", hiveCli.execute(sql, taskName).root))
+      case (HiveCLI, _) => wrapAsStats(ConfigFactory.empty().withValue("rows-effected",
+        hiveCli.execute(sql.mkString(";\n"), taskName).root))
     }
   }
 
-  override def teardown(): Unit = {
-    connectionProfile match {
-      case Some(_) => super.teardown()
-      case _ => ()
+  protected def executeQuery: Config = {
+    wrapAsStats {
+      ConfigFactory.empty.withValue("rows-effected",
+        ConfigValueFactory.fromAnyRef(sql.map(x => dbInterface.execute(x)).sum))
     }
   }
+
+  override def teardown(): Unit = {}
 
 }
 
@@ -94,9 +98,14 @@ object HQLExecute extends TaskLike {
   override val taskName: String = "HQLExecute"
 
   override def paramConfigDoc: Config =  database.SQLExecute.paramConfigDoc(10000)
-                                                .withValue(""""dsn_[1]"""",ConfigValueFactory.fromAnyRef("connection-name @optional"))
-                                                .withValue(""""dsn_[2]"""",DBConnection.structure(10000).root())
-                                                .withValue("""mode""", ConfigValueFactory.fromAnyRef("beeline @default(cli) @allowed(cli, beeline, hiveserver2)") )
+                                              .withValue(""""dsn_[1]"""",ConfigValueFactory.fromAnyRef("connection-name @optional"))
+                                              .withValue(""""dsn_[2]"""",DBConnection.structure(10000).root())
+                                              .withValue("""mode""", ConfigValueFactory.fromAnyRef("beeline @default(cli) @allowed(cli, beeline, hiveserver2)") )
+                                              .withoutPath("sql")
+                                              .withValue(""""sql_[1]"""",
+                                                ConfigValueFactory.fromAnyRef("DELETE FROM TABLENAME @optional(either this or sql-file key is required)"))
+                                              .withValue(""""sql_[2]"""",
+                                                ConfigValueFactory.fromIterable(Seq("DROP TABLE tablename1", "INSERT INTO tablename1 SELECT * FROM tablename2").asJava))
 
   override def defaultConfig: Config =  ConfigFactory.empty().withValue("mode", ConfigValueFactory.fromAnyRef("cli"))
 
@@ -105,10 +114,13 @@ object HQLExecute extends TaskLike {
       |either a name of the dsn or a config-object with username/password and other credentials.
       |This field is optional field and if not provided then task would use the local Hive CLI installation to execute the query
     """.stripMargin,
-  "mode" -> "mode of execution of HQL. three modes are allowed hiveserver2, cli, beeline")
+  "mode" -> "mode of execution of HQL. three modes are allowed hiveserver2, cli, beeline",
+  "sql" -> "either a sql string or an array of SQLs.",
+  "sql-file" -> "the file containing the queries. each query must be separated by a semicolon and new a line")
+
 
   override def apply(name: String, config:  Config) = {
-    val sql = config.asInlineOrFile("sql")
+    val sql = config.asInlineArrayOrFile("sql", s";${System.lineSeparator}")
     val connection = config.hasPath("dsn") match {
       case true => Some(DBConnection.parseConnectionProfile(config.getValue("dsn")))
       case false => None
@@ -150,6 +162,9 @@ object HQLExecute extends TaskLike {
   override val outputConfigDesc: String =
     """
       | Here the hypothetical task has two insert statements that updates two tables *tablename_1* and *tablename_2*.
-      | *tablename_1* has modified 52 rows and *tablename_2* has modified 100 rows.
+      | *tablename_1* has modified 52 rows and *tablename_2* has modified 100 rows. The above config is applicable only
+      | for mode `cli` and `beeline`. The output config for `hiveserver2` mode is always `{ taskname.__stats__.rows-effected = 0 }`.
+      | This is because hive-jdbc doesnt return no of rows updated as stated here [HIVE-12382](https://issues.apache.org/jira/browse/HIVE-12382)
+      |
     """.stripMargin
 }

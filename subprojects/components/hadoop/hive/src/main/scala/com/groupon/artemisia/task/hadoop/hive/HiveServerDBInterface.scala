@@ -35,8 +35,11 @@ package com.groupon.artemisia.task.hadoop.hive
 import java.io.InputStream
 import java.net.URI
 import java.sql.{Connection, DriverManager}
+
+import com.groupon.artemisia.core.AppLogger.info
 import com.groupon.artemisia.task.database.{DBImporter, DBInterface, DefaultDBExporter}
 import com.groupon.artemisia.task.settings.{DBConnection, LoadSetting}
+import com.groupon.artemisia.util.Util
 
 /**
   * Created by chlr on 8/1/16.
@@ -51,6 +54,22 @@ class HiveServerDBInterface(connectionProfile: DBConnection) extends DBInterface
       connectionProfile.username,
       connectionProfile.password
     )
+  }
+
+  /**
+    *
+    * @param sql DML query to be executed
+    * @return number of records updated/deleted/inserted
+    */
+  override def execute(sql: String, printSQL: Boolean = true): Long = {
+    if (printSQL) {
+      info("executing query")
+      info(Util.prettyPrintAsciiBanner(sql, "query"))
+    }
+    val stmt = connection.createStatement()
+    val recordCnt = stmt.executeUpdate(sql)
+    stmt.close()
+    recordCnt
   }
 
   override def load(tableName: String, inputStream: InputStream, loadSetting: LoadSetting) = ???

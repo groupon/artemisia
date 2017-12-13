@@ -44,7 +44,7 @@ class HiveServerInterfaceSpec extends TestSpec {
 
   "HiveServerDBInterface" must "execute query" in {
     val tableName = "hive_table_execute"
-    val task = new HQLExecute("hql_execute", s"delete from $tableName", Some(DBConnection.getDummyConnection)) {
+    val task = new HQLExecute("hql_execute", Seq(s"delete from $tableName"), HiveServer2, Some(DBConnection.getDummyConnection)){
       override lazy val dbInterface = TestDBInterFactory.withDefaultDataLoader(tableName)
     }
     val result = task.execute()
@@ -66,7 +66,8 @@ class HiveServerInterfaceSpec extends TestSpec {
 
   it must "support sqlread" in {
     val tableName = "hive_table_sqlread"
-    val task = new HQLRead("hql_execute", s"select count(*) as cnt from $tableName", Some(DBConnection.getDummyConnection)) {
+    val task = new HQLRead("hql_execute", s"select count(*) as cnt from $tableName",
+      HiveServer2, Some(DBConnection.getDummyConnection)) {
       override lazy val dbInterface = TestDBInterFactory.withDefaultDataLoader(tableName)
     }
     val result = task.execute()

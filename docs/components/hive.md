@@ -47,7 +47,8 @@ A component for hive interaction
            username = "username @required"
         }
          mode = "beeline @default(cli) @allowed(cli, beeline, hiveserver2)"
-         sql = "DELETE FROM TABLENAME @optional(either this or sqlfile key is required)"
+         sql_[1] = "DELETE FROM TABLENAME @optional(either this or sqlfile key is required)"
+         sql_[2] = ["DROP TABLE tablename1", "INSERT INTO tablename1 SELECT * FROM tablename2"]
          sqlfile = "/var/tmp/sqlfile.sql @optional(either this or sql key is required)"
       }
      }
@@ -59,7 +60,7 @@ A component for hive interaction
  either a name of the dsn or a config-object with username/password and other credentials.
  This field is optional field and if not provided then task would use the local Hive CLI installation to execute the query
      
- * sql: select query to be run
+ * sql: either an string or an array of SQL.
  * sqlfile: the file containing the query
  * mode: mode of execution of HQL. three modes are allowed hiveserver2, cli, beeline
 
@@ -79,7 +80,10 @@ A component for hive interaction
 
  
  Here the hypothetical task has two insert statements that updates two tables *tablename_1* and *tablename_2*.
- *tablename_1* has modified 52 rows and *tablename_2* has modified 100 rows.
+ *tablename_1* has modified 52 rows and *tablename_2* has modified 100 rows. The above config is applicable only
+ for mode `cli` and `beeline`. The output config for `hiveserver2` mode is always `{ taskname.__stats__.rows-effected = 0 }`.
+ This is because hive-jdbc doesnt return no of rows updated as stated here [HIVE-12382](https://issues.apache.org/jira/browse/HIVE-12382)
+
     
            
 
