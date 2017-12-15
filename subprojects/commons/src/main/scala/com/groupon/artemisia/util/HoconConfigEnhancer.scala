@@ -33,8 +33,12 @@
 package com.groupon.artemisia.util
 
 import java.io.File
-import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
+import java.util.regex.Matcher
+
+import com.groupon.artemisia.inventory.exceptions.ConfigException
 import com.groupon.artemisia.task.TaskContext
+import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
+
 import scala.collection.JavaConverters._
 import scala.util.matching.Regex.Match
 
@@ -96,13 +100,20 @@ class HoconConfigEnhancer(val root: Config)  {
 
 object HoconConfigEnhancer {
 
-  private def resolveString(str: String, reference: Config) = {
+  private def resolveString(str: String, reference: Config): String = {
     def replace(x: Match): String = {
       val variable = x.group(2)
       if (x.group(1) == "?")
-        if (reference.hasPath(variable)) reference.getString(variable) else ""
-      else
-        reference.getString(variable)
+        if (reference.hasPath(variable))
+          Matcher.quoteReplacement(resolveString(reference.getString(variable), reference))
+        else ""
+      else {
+        if (reference.hasPath(variable)) {
+          Matcher.quoteReplacement(resolveString(reference.getString(variable), reference))
+        } else {
+          throw new ConfigException(s"unable to resolve variable $variable")
+        }
+      }
     }
     val rgx = """\$\{(\??)(.+?)\}""".r
     rgx.replaceAllIn(str, replace _)
@@ -115,7 +126,9 @@ object HoconConfigEnhancer {
       case Array() => 0
       case x => x.min
     }
-    val result = str.split("\n") filter { _.trim.length > 0 } map { ("""^[\s]{"""+minWhiteSpace+"""}""").r.replaceFirstIn(_,"") }
+    val result = str.split("\n") filter { _.trim.length > 0 } map {
+      ("""^[\s]{"""+minWhiteSpace+"""}""").r.replaceFirstIn(_,"")
+    }
     result.mkString("\n")
   }
 

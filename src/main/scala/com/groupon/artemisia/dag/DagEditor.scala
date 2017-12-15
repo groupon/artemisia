@@ -33,13 +33,11 @@
 package com.groupon.artemisia.dag
 
 import java.io.File
-
 import com.groupon.artemisia.core.BasicCheckpointManager.CheckpointData
 import com.groupon.artemisia.core.Keywords
 import com.groupon.artemisia.dag.Dag.Node
 import com.groupon.artemisia.util.HoconConfigUtil.Handler
 import com.typesafe.config._
-
 import scala.collection.JavaConverters._
 /**
   * Created by chlr on 8/12/16.
@@ -48,7 +46,7 @@ import scala.collection.JavaConverters._
 object DagEditor {
 
   /**
-    * editdag and emit new nodes and associated config object which will be later merged with the jobConfig.
+    * edit dag and emit new nodes and associated config object which will be later merged with the jobConfig.
     * ideally the jobConfig object can be inferred from new nodes objects
     * because of the payload property of the node object. But yet this method
     * outputs both new nodes generated and the jobConfig because the jobConfig
@@ -118,7 +116,9 @@ object DagEditor {
     }
     val nodes = for (i <- 1 to configList.size) yield {
       Node(s"${node.name}$$$i",
-        node.payload.withoutPath(Keywords.Task.ITERATE).withValue(Keywords.Task.VARIABLES, configList.get(i - 1))
+        node.payload.withoutPath(Keywords.Task.ITERATE)
+          .withValue(Keywords.Task.VARIABLES, configList.get(i - 1)
+            .withFallback(node.payload.getAs[Config](Keywords.Task.VARIABLES).getOrElse(ConfigFactory.empty)))
       )
     }
     nodes.sliding(groupSize,groupSize).sliding(2,1) foreach {

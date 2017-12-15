@@ -35,7 +35,6 @@ package com.groupon.artemisia.task.hadoop.hive
 import java.io.InputStream
 import java.net.URI
 import java.sql.{Connection, DriverManager}
-
 import com.groupon.artemisia.core.AppLogger.info
 import com.groupon.artemisia.task.database.{DBImporter, DBInterface, DefaultDBExporter}
 import com.groupon.artemisia.task.settings.{DBConnection, LoadSetting}

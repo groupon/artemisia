@@ -33,7 +33,7 @@
 package com.groupon.artemisia.task
 
 import com.typesafe.config.{Config, ConfigFactory}
-import com.groupon.artemisia.inventory.exceptions.UnknownTaskException
+import com.groupon.artemisia.inventory.exceptions.UnKnownTaskException
 import com.groupon.artemisia.util.Util
 /**
  * Created by chlr on 3/3/16.
@@ -88,7 +88,7 @@ abstract class Component(val name: String) {
                                   .withFallback(x.defaultConfig)
                                   .withFallback(defaultConfig))
 
-      case Nil => throw new UnknownTaskException(s"unknown task $task in component $name")
+      case Nil => throw new UnKnownTaskException(s"unknown task $task in component $name")
       case _ => throw new RuntimeException(s"multiple tasks named $task is register component $name")
     }
   }
@@ -123,7 +123,7 @@ abstract class Component(val name: String) {
   def taskDoc(task: String): String = {
     tasks filter { _.taskName == task } match {
       case x :: Nil => x.doc(name)
-      case Nil => throw new UnknownTaskException(s"unknown task $task in component $name")
+      case Nil => throw new UnKnownTaskException(s"unknown task $task in component $name")
       case _ => throw new RuntimeException(s"multiple tasks named $task is register component $name")
     }
   }

@@ -33,12 +33,12 @@
 package com.groupon.artemisia.task.localhost
 
 import java.nio.file.Paths
-import com.typesafe.config.{Config, ConfigFactory}
 import com.groupon.artemisia.core.{AppLogger, Keywords}
 import com.groupon.artemisia.task.localhost.util.ProcessRunner
 import com.groupon.artemisia.task.{Task, TaskLike}
 import com.groupon.artemisia.util.HoconConfigUtil.Handler
 import com.groupon.artemisia.util.Util
+import com.typesafe.config.{Config, ConfigFactory}
 
 /**
  * Created by chlr on 2/21/16.
@@ -79,7 +79,7 @@ object ScriptTask extends TaskLike {
 
   override val info = "executes script with customizable interpreter"
 
-  override val defaultConfig = ConfigFactory parseString
+  override val defaultConfig: Config = ConfigFactory parseString
     s"""
       | {
       |   interpreter = "/bin/sh"

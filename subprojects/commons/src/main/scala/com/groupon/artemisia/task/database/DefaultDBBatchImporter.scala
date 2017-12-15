@@ -69,7 +69,6 @@ object DefaultDBBatchImporter {
       catch {
         case e: BatchUpdateException => {
           val results = e.getUpdateCounts
-          println(results.mkString(","))
           val retryRecords = results zip validRows filter { x => x._1 < 0 } map { _._2 }
           stmt.clearBatch()
           for(record <- retryRecords) {
