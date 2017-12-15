@@ -33,7 +33,7 @@
 package com.groupon.artemisia.task.hadoop.hive
 
 import com.groupon.artemisia.TestSpec
-import com.groupon.artemisia.task.database.{BasicExportSetting, TestDBInterFactory}
+import com.groupon.artemisia.task.database.{BasicExportSetting, DBInterface, TestDBInterFactory}
 import com.groupon.artemisia.task.settings.DBConnection
 import com.groupon.artemisia.util.FileSystemUtil._
 
@@ -45,7 +45,7 @@ class HiveServerInterfaceSpec extends TestSpec {
   "HiveServerDBInterface" must "execute query" in {
     val tableName = "hive_table_execute"
     val task = new HQLExecute("hql_execute", Seq(s"delete from $tableName"), HiveServer2, Some(DBConnection.getDummyConnection)){
-      override lazy val dbInterface = TestDBInterFactory.withDefaultDataLoader(tableName)
+      override lazy val dbInterface: DBInterface = TestDBInterFactory.withDefaultDataLoader(tableName)
     }
     val result = task.execute()
     result.getInt("hql_execute.__stats__.rows-effected") must be (2)
@@ -57,7 +57,7 @@ class HiveServerInterfaceSpec extends TestSpec {
       file =>
         val task = new HQLExport("hql_execute", s"select * from $tableName", file.toURI
           ,DBConnection.getDummyConnection , BasicExportSetting()) {
-          override val dbInterface = TestDBInterFactory.withDefaultDataLoader(tableName)
+          override val dbInterface: DBInterface = TestDBInterFactory.withDefaultDataLoader(tableName)
         }
         val result = task.execute()
         result.getInt(s"hql_execute.__stats__.rows") must be (2)
@@ -68,7 +68,7 @@ class HiveServerInterfaceSpec extends TestSpec {
     val tableName = "hive_table_sqlread"
     val task = new HQLRead("hql_execute", s"select count(*) as cnt from $tableName",
       HiveServer2, Some(DBConnection.getDummyConnection)) {
-      override lazy val dbInterface = TestDBInterFactory.withDefaultDataLoader(tableName)
+      override lazy val dbInterface: DBInterface = TestDBInterFactory.withDefaultDataLoader(tableName)
     }
     val result = task.execute()
     result.getInt("CNT") must be (2)
