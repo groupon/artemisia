@@ -43,7 +43,7 @@ import com.groupon.artemisia.core.{AppContext, AppLogger, Keywords}
 class ActorSysManager(app_context: AppContext) {
 
   AppLogger debug "starting actor system"
-  val system = ActorSystem.create(Keywords.APP,getActorConfig(app_context))
+  val system: ActorSystem = ActorSystem.create(Keywords.APP,getActorConfig(app_context))
 
   protected[dag] def getActorConfig(app_context: AppContext): Config = {
     val actor_config =
@@ -54,13 +54,12 @@ class ActorSysManager(app_context: AppContext) {
          |  thread-pool-executor {
          |    core-pool-size-min = 3
          |    core-pool-size-factor = 3.0
-         |    core-pool-size-max = ${ math.ceil(app_context.dagSetting.concurrency * 1.5) }
-          |  }
-          |  throughput = 1
-          |}
-          |
+         |    core-pool-size-max = ${math.ceil(app_context.dagSetting.concurrency * 1.5)}
+         |  }
+         |  throughput = 1
+         |}
+         |
       """.stripMargin
-
     ConfigFactory parseString actor_config
   }
 

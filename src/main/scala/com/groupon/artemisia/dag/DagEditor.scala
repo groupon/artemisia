@@ -201,26 +201,22 @@ object DagEditor {
     * @param nodes new nodes replacing the node
     */
   def replaceNode(dag: Dag ,node: Node, nodes: Seq[Node], checkpoint: CheckpointData) = {
-    nodes foreach {
+    nodes.filter(_.allParents == Nil )
+      .foreach({_.setDependencies(node.successParents, node.failParents, node.completeParents)})
+    val leafNodes = nodes.filterNot(x => nodes.exists(_.allParents contains x))
+    dag.graph.filter(_.successParents contains node)
+      .foreach(x => x.successParents = x.successParents.filterNot(_ == node) ++ leafNodes)
+    dag.graph.filter( _.failParents.contains(node))
+      .foreach(x => x.failParents = x.failParents.filterNot(_ == node) ++ leafNodes)
+    dag.graph.filter(_.completeParents contains node)
+      .foreach(x => x.completeParents = x.completeParents.filterNot(_ == node) ++ leafNodes)
+    dag.graph = dag.graph.filterNot(_ == node) ++ nodes
+    nodes.foreach(
       x => checkpoint.taskStatRepo.get(x.name) match {
-        case Some(taskStat) => dag.setNodeStatus(node.name,taskStat.status)
+        case Some(taskStat) => dag.setNodeStatus(x.name,taskStat.status)
         case _ => ()
       }
-    }
-    nodes filter (_.allParents == Nil ) foreach {
-      _.setDependencies(node.successParents, node.failParents, node.completeParents)
-    }
-    val leafNodes = nodes filterNot { x => nodes.exists(_.allParents contains x) }
-    dag.graph filter { _.successParents contains node } foreach {
-      case x => x.successParents = x.successParents.filterNot(_ == node) ++ leafNodes
-    }
-    dag.graph filter { _.failParents contains node } foreach {
-      case x => x.failParents = x.failParents.filterNot(_ == node) ++ leafNodes
-    }
-    dag.graph filter { _.completeParents contains node } foreach {
-      case x => x.completeParents = x.completeParents.filterNot(_ == node) ++ leafNodes
-    }
-    dag.graph = dag.graph.filterNot(_ == node) ++ nodes
+    )
   }
 
 }

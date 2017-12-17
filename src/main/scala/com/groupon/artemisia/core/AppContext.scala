@@ -52,8 +52,8 @@ import scala.concurrent.duration.FiniteDuration
 class AppContext(private val cmdLineParam: AppSetting) {
 
 
-  val skipCheckpoints = cmdLineParam.skip_checkpoints
-  val globalConfigFile = cmdLineParam.globalConfigFileRef
+  val skipCheckpoints: Boolean = cmdLineParam.skip_checkpoints
+  val globalConfigFile: Option[String] = cmdLineParam.globalConfigFileRef
   val runId: String = cmdLineParam.run_id.getOrElse(Util.getUUID)
 
   // Always keep the payload of Appcontext and its smaller cousin TaskContext in sync.

@@ -80,11 +80,9 @@ private[dag] class Dag(var graph: Seq[Node], checkpointData: CheckpointData) {
       case nodes =>
        editDag(nodes.foldLeft(code) {
           (carry, node) =>
-            DagEditor.editDag(node, code) match {
-              case (newNodes, newConfig) =>
+            val (newNodes, newConfig) =  DagEditor.editDag(node, code)
                 DagEditor.replaceNode(this, node, newNodes, checkpointData) // performing side-effects inside a map function.
                 newConfig withFallback carry.withoutPath(s""""${node.name}"""")
-            }
         })
     }
   }
@@ -180,14 +178,10 @@ private[dag] class Dag(var graph: Seq[Node], checkpointData: CheckpointData) {
     * @return
     */
   def getRunnableNodes: Seq[Node] = {
-    graph map {
-      x => checkpointData.taskStatRepo.get(x.name) match {
+    graph.map(x => checkpointData.taskStatRepo.get(x.name) match {
         case Some(stat) if x._status != stat.status => x._status = stat.status; x
         case _ => x
-      }
-    } filter {
-      _.isRunnable
-    }
+      }).filter(_.isRunnable)
   }
 
   /**

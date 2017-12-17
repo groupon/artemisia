@@ -60,6 +60,7 @@ class FileCheckPointManager(checkpointFile: File) extends BasicCheckpointManager
        case (x,y) => adhocPayload = x; taskStatRepo = y
      }
 
+
   /**
    * Saves the TaskStats of a task named taskName
    * This method is not threadsafe and hence must be invoked within the actor context

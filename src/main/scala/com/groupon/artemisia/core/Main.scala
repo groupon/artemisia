@@ -44,9 +44,7 @@ object Main {
     parseCmdLineArguments(args,show_usage_on_error) match {
       case cmdLineParams @ AppSetting(Some("run"), Some(_), _, _, _, _, _, _, _, _) => Command.run(cmdLineParams)
       case cmdLineParams @ AppSetting(Some("doc"), _, _, _, _, _, _, _, component, task) => Command.doc(cmdLineParams)
-      case cmdLineParams @ _ => {
-        throw new IllegalArgumentException("--help to see supported options")
-         }
+      case cmdLineParams @ _ => throw new IllegalArgumentException("--help to see supported options")
       }
     }
 
@@ -64,9 +62,7 @@ object Main {
       } text "command options"
       opt[String]("context") valueName "k1=v1,k2=v2..." action { (x, c) => c.copy(context = Some(x)) }
       opt[String]("config") action { (x, c) => c.copy(config = Some(x)) } text "configuration file"
-
-      override def showUsageOnError = usageOnError
-
+      override def showUsageOnError: Boolean = usageOnError
       override def errorOnUnknownArgument = true
     }
 
