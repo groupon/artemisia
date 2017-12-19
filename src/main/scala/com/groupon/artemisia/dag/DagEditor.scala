@@ -220,7 +220,7 @@ object DagEditor {
           case (acc, (key, value)) => acc.withValue(key, ConfigValueFactory.fromAnyRef(value))
         }))
         case _ => throw new DagException(s"The compiled expression $expr didn't return an acceptable type. " +
-          s"Acceptable types are Traversable[(String, T)] or Traversable[Map[String,T]] where T is any valid type for" +
+          s"The type must be Traversable[Map[String,T]] where T is any valid type for" +
           " `com.typesafe.config.ConfigValueFactory.fromAnyRef`")
       }
     }
