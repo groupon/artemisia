@@ -39,6 +39,9 @@ import com.groupon.artemisia.dag.Dag.Node
 import com.groupon.artemisia.util.HoconConfigUtil.Handler
 import com.typesafe.config._
 import scala.collection.JavaConverters._
+import scala.reflect.runtime.universe
+import scala.tools.reflect.ToolBox
+import scala.util.{Failure, Success, Try}
 /**
   * Created by chlr on 8/12/16.
   */
@@ -60,7 +63,7 @@ object DagEditor {
     */
   def editDag(node: Node, jobConfig: Config): (Seq[Node],Config) = {
     node match {
-      case x if isIterableNode(x) => expandIterableNode(x)
+      case x if isIterableNode(x) => new NodeIterationProcessor(x).expand
       case x if isWorkletNode(x) => importModule(x, jobConfig)
       case _ => throw new DagEditException(node)
     }
@@ -97,43 +100,6 @@ object DagEditor {
     (node.payload.getString(Keywords.Task.COMPONENT) == Keywords.DagEditor.Component) &&
       (node.payload.getString(Keywords.Task.TASK) == Keywords.DagEditor.Task)
   }
-
-
-
-  /**
-    * expand iterable node to sequence of node
-    *
-    * @param node node to be expanded
-    * @return sequence of the expanded nodes
-    */
-  def expandIterableNode(node: Node) = {
-    val (configList: ConfigList, groupSize: Int, allowFailure: Boolean) =
-      node.payload.as[ConfigValue](Keywords.Task.ITERATE) match {
-      case x: ConfigList => (x, 1, false)
-      case x: ConfigObject => (x.toConfig.getList("values"), x.toConfig.getAs[Int]("group").getOrElse(1),
-        x.toConfig.getAs[Boolean]("allow-failure").getOrElse(false))
-      case _ => throw new RuntimeException(s"invalid config for ${Keywords.Task.ITERATE} for node ${node.name}")
-    }
-    val nodes = for (i <- 1 to configList.size) yield {
-      Node(s"${node.name}$$$i",
-        node.payload.withoutPath(Keywords.Task.ITERATE)
-          .withValue(Keywords.Task.VARIABLES, configList.get(i - 1)
-            .withFallback(node.payload.getAs[Config](Keywords.Task.VARIABLES).getOrElse(ConfigFactory.empty)))
-      )
-    }
-    nodes.sliding(groupSize,groupSize).sliding(2,1) foreach {
-      case parents :: children :: Nil => for(child <- children) {
-        if (allowFailure) child.completeParents =  parents else child.successParents = parents
-      }
-      case _ :: Nil => ()
-    }
-    val outputConfig = nodes.foldLeft(ConfigFactory.empty) {
-      case (carry, inputNode) => carry.withFallback(ConfigFactory.empty.withValue(s""""${inputNode.name}"""",
-        inputNode.payload.root()))
-    }
-    nodes -> outputConfig
-  }
-
 
   /**
     * import worklet module and prepare it for integration with main job
@@ -180,7 +146,7 @@ object DagEditor {
         ,ConfigValueFactory.fromIterable(dependency.map(x => s"${parentNode.name}$$$x").asJava))
       case None => importedNodePayLoad
     }
-    // Assertion is not added here because the assertion node must be added only in the last node(s) of the  worklet
+    // Assertion is not added here because the assertion node must be added only in the last node(s) of the  Worklet
     val taskSettingNodes = Seq(Keywords.Task.IGNORE_ERROR, Keywords.Task.COOLDOWN, Keywords.Task.ATTEMPT, Keywords.Task.CONDITION
       ,Keywords.Task.VARIABLES, Keywords.Task.ASSERTION)
     taskSettingNodes.foldLeft(result) {
@@ -219,4 +185,83 @@ object DagEditor {
     )
   }
 
+
+  /**
+    * this class processes a single node and expands it to several nodes based on its iteration logic
+    * @param node
+    */
+  private[dag] class NodeIterationProcessor(node: Node) {
+
+    protected def iterationValue: (ConfigValue, Int, Boolean) = {
+      val iterateValue: ConfigValue = node.payload.as[ConfigValue](Keywords.Task.ITERATE)
+      iterateValue.valueType match {
+        case ConfigValueType.STRING => (iterateValue, 1, false)
+        case ConfigValueType.LIST => (iterateValue, 1, false)
+        case ConfigValueType.OBJECT =>
+          val x = iterateValue.asInstanceOf[ConfigObject].toConfig
+          (x.as[ConfigValue]("values"), x.getAs[Int]("group").getOrElse(1), x.getAs[Boolean]("allow-failure").getOrElse(false))
+        case _ => throw new RuntimeException(s"invalid config for ${Keywords.Task.ITERATE} for node ${node.name}")
+      }
+    }
+
+    /**
+      * evaluate expression transform result to Traversable of Config
+      * @param expr
+      * @return
+      */
+    protected def exprEvaluator(expr: String): Traversable[Config] = {
+      val toolbox = universe.runtimeMirror(this.getClass.getClassLoader).mkToolBox()
+      Try(toolbox.compile(toolbox.parse(expr))) match {
+        case Success(_) => ()
+        case Failure(_) => throw new DagException(s"unable to compile scala expression: $expr")
+      }
+      toolbox.eval(toolbox.parse(expr)) match {
+        case x: Traversable[Map[String, Any]] @unchecked => x.map(x => x.foldLeft(ConfigFactory.empty)({
+          case (acc, (key, value)) => acc.withValue(key, ConfigValueFactory.fromAnyRef(value))
+        }))
+        case _ => throw new DagException(s"The compiled expression $expr didn't return an acceptable type. " +
+          s"Acceptable types are Traversable[(String, T)] or Traversable[Map[String,T]] where T is any valid type for" +
+          " `com.typesafe.config.ConfigValueFactory.fromAnyRef`")
+      }
+    }
+
+    /**
+      *
+      * @return
+      */
+    def expand: (Seq[Node], Config) = {
+      val (values: ConfigValue,  groupSize: Int, allowFailure: Boolean) = iterationValue
+      val valueList: Vector[ConfigValue] = values.valueType() match {
+        case ConfigValueType.STRING => exprEvaluator(values.unwrapped().toString).map(_.root()).toVector
+        case ConfigValueType.LIST => values.asInstanceOf[ConfigList].asScala.toVector
+        case _ => throw new DagException(s"iteration values (${values.render(ConfigRenderOptions.concise)}) can " +
+          s"either be a String or List only")
+      }
+      val nodes = for (i <- 1 to valueList.size) yield {
+        Node(s"${node.name}$$$i",
+          node.payload.withoutPath(Keywords.Task.ITERATE)
+            .withValue(Keywords.Task.VARIABLES, valueList(i-1)
+              .withFallback(node.payload.getAs[Config](Keywords.Task.VARIABLES).getOrElse(ConfigFactory.empty)))
+        )
+      }
+      nodes.sliding(groupSize,groupSize).sliding(2,1) foreach {
+        case parents :: children :: Nil => for(child <- children) {
+          if (allowFailure) child.completeParents =  parents else child.successParents = parents
+        }
+        case _ :: Nil => ()
+      }
+      val outputConfig = nodes.foldLeft(ConfigFactory.empty) {
+        case (carry, inputNode) => carry.withFallback(ConfigFactory.empty.withValue(s""""${inputNode.name}"""",
+          inputNode.payload.root()))
+      }
+      nodes -> outputConfig
+    }
+  }
+
 }
+
+
+
+
+
+
