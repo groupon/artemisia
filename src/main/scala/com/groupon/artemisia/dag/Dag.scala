@@ -128,7 +128,7 @@ private[dag] class Dag(var graph: Seq[Node], checkpointData: CheckpointData) {
     * @param jobPayload
     * @return
     */
-  protected def referenceConfig(jobPayload: Config) = {
+  def referenceConfig(jobPayload: Config) = {
    val config =  graph.foldLeft(jobPayload) {
       (carry: Config, inputNode: Node) =>
         carry
@@ -541,14 +541,14 @@ object Dag {
       * @return
       */
     private[Dag] def getNodeTask(referenceConfig: Config, appContext: AppContext): TaskHandler = {
-      val config = resolvedPayload(referenceConfig)
-      val componentName = config.as[String](Task.COMPONENT)
-      val taskName = config.as[String](Keywords.Task.TASK)
+      this.resolve(referenceConfig)
+      val componentName = this.payload.as[String](Task.COMPONENT)
+      val taskName = this.payload.as[String](Keywords.Task.TASK)
       val defaults = appContext.payload.getAs[Config](s""""${Keywords.Config.DEFAULTS}"."$componentName"."$taskName"""")
       val component = appContext.componentMapper(componentName)
-      val task = component.dispatchTask(taskName, name, config.as[Config](Keywords.Task.PARAMS) withFallback
+      val task = component.dispatchTask(taskName, name, this.payload.as[Config](Keywords.Task.PARAMS) withFallback
         defaults.getOrElse(ConfigFactory.empty()))
-      new TaskHandler(TaskConfig(config, appContext), task, referenceConfig)
+      new TaskHandler(TaskConfig(this.payload, appContext), task, referenceConfig)
     }
 
 
@@ -561,8 +561,7 @@ object Dag {
       * @param contextConfig contextConfig for this node.
       * @return resolved payload of the node.
       */
-    private def resolvedPayload(contextConfig: Config) = {
-
+    private[dag] def resolve(contextConfig: Config) = {
       // we do this so that assertions are not resolved now and only after task execution completes
       val assertions = payload.getAs[ConfigValue](Keywords.Task.ASSERTION)
       val variables = payload.getAs[Config](Keywords.Task.VARIABLES)
@@ -573,7 +572,7 @@ object Dag {
         .withoutPath(Keywords.Task.ASSERTION)
         .withoutPath(Keywords.Task.VARIABLES)
         .hardResolve(variables withFallback contextConfig)
-      assertions match {
+      this.payload = assertions match {
         case Some(x) => config.withValue(Keywords.Task.ASSERTION, x)
         case None => config
       }

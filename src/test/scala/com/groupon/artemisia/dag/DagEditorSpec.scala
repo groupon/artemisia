@@ -59,7 +59,7 @@ class DagEditorSpec extends TestSpec {
 
     val dag = new Dag(Seq(node1, node2, node3, node4), BasicCheckpointManager.CheckpointData(ConfigFactory.empty(), Map()))
 
-    val (Seq(node3a, node3b, node3c),modifiedConfig) = DagEditor.expandIterableNode(node3)
+    val (Seq(node3a, node3b, node3c),modifiedConfig) = new DagEditor.NodeIterationProcessor(node3, config).expand
     node3a.successParents must be (Seq())
     node3b.successParents must be (Seq())
     node3c.successParents must be (Seq(node3a, node3b))
@@ -83,7 +83,7 @@ class DagEditorSpec extends TestSpec {
     val node2 = Node("task2", config.as[Config]("task2"))
     val node3 = Node("task3", config.as[Config]("task3"))
     val dag = new Dag(Seq(node1, node2, node3), BasicCheckpointManager.CheckpointData(ConfigFactory.empty(), Map()))
-    val (Seq(node2a, node2b), modifiedConfig) = DagEditor.importModule(node2, config) match {
+    val (Seq(node2a, node2b), modifiedConfig) = new DagEditor.ModuleImporter(node2, config).importModule match {
       case (x: Seq[Node], y) => x.sortWith((node1, node2) => node1.name < node2.name) -> y
     }
     Seq(node2a.name, node2b.name) must contain only ("task2$step1","task2$step2")
@@ -100,7 +100,7 @@ class DagEditorSpec extends TestSpec {
     val node2 = Node("task2", config.as[Config]("task2"))
     val node3 = Node("task3", config.as[Config]("task3"))
     val dag = new Dag(Seq(node1, node2, node3), BasicCheckpointManager.CheckpointData(ConfigFactory.empty(), Map()))
-    val (Seq(node2a, node2b), modifiedConfig) = DagEditor.importModule(node2, config) match {
+    val (Seq(node2a, node2b), modifiedConfig) = new DagEditor.ModuleImporter(node2, config).importModule match {
       case (x: Seq[Node], y) => x.sortWith((node1, node2) => node1.name < node2.name) -> y
     }
     Seq(node2a.name, node2b.name) must contain only ("task2$step1","task2$step2")

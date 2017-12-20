@@ -33,11 +33,12 @@
 package com.groupon.artemisia.dag
 
 import java.io.File
+
 import com.groupon.artemisia.core.BasicCheckpointManager.CheckpointData
 import com.groupon.artemisia.core.Keywords
 import com.groupon.artemisia.dag.Dag.Node
-import com.groupon.artemisia.util.HoconConfigUtil.Handler
 import com.typesafe.config._
+import com.groupon.artemisia.util.HoconConfigUtil.{Handler, configToConfigEnhancer}
 import scala.collection.JavaConverters._
 import scala.reflect.runtime.universe
 import scala.tools.reflect.ToolBox
@@ -63,8 +64,8 @@ object DagEditor {
     */
   def editDag(node: Node, jobConfig: Config): (Seq[Node],Config) = {
     node match {
-      case x if isIterableNode(x) => new NodeIterationProcessor(x).expand
-      case x if isWorkletNode(x) => importModule(x, jobConfig)
+      case x if isIterableNode(x) => new NodeIterationProcessor(node, jobConfig).expand
+      case x if isWorkletNode(x) => new ModuleImporter(node, jobConfig).importModule
       case _ => throw new DagEditException(node)
     }
   }
@@ -101,61 +102,6 @@ object DagEditor {
       (node.payload.getString(Keywords.Task.TASK) == Keywords.DagEditor.Task)
   }
 
-  /**
-    * import worklet module and prepare it for integration with main job
-    * @param node
-    * @param jobConfig
-    * @return
-    */
-  def importModule(node: Node, jobConfig: Config) = {
-    var module = node.payload.as[Config](Keywords.Task.PARAMS).root()
-      .keySet().asScala.toList match {
-      case "file" :: Nil => ConfigFactory parseFile new File(node.payload.as[String](s"${Keywords.Task.PARAMS}.file"))
-      case "inline" :: Nil =>
-        jobConfig.getConfig(Keywords.Config.WORKLET).as[Config](node.payload.as[String](s"${Keywords.Task.PARAMS}.inline"))
-      case _ => throw new IllegalArgumentException("file and inline are the only supported nodes for Dag Import task")
-    }
-    val nodeMap = Dag.extractTaskNodes(module)
-    val nodes = nodeMap.toSeq map {
-      case (name, payload) =>
-        // performing side-effect in map operation.
-        module = module
-          .withoutPath(name)
-          .withValue(s""""${node.name}$$$name"""", processImportedNode(payload, node).root())
-        Node(s"${node.name}$$$name", module.as[Config](s""""${node.name}$$$name""""))
-    }
-    val dag = Dag(nodes) // we create a dag object to link nodes and identify cycles.
-    node.payload.getAs[ConfigValue](Keywords.Task.ASSERTION) foreach {
-      assertion => dag.leafNodes.foreach(x => x.payload.withValue(Keywords.Task.ASSERTION, assertion))
-    }
-    dag.graph -> module
-  }
-
-
-  /**
-    * process imported worklet node. The following changes are done
-    *   * change node dependencies with its modified new name
-    *   * change node settings with the settings inherited from the import node
-    * @param importedNodePayLoad
-    * @param parentNode
-    * @return
-    */
-  private def processImportedNode(importedNodePayLoad: Config, parentNode: Node) = {
-    val result = importedNodePayLoad.getAs[List[String]](Keywords.Task.DEPENDENCY) match {
-      case Some(dependency) => importedNodePayLoad.withValue(Keywords.Task.DEPENDENCY
-        ,ConfigValueFactory.fromIterable(dependency.map(x => s"${parentNode.name}$$$x").asJava))
-      case None => importedNodePayLoad
-    }
-    // Assertion is not added here because the assertion node must be added only in the last node(s) of the  Worklet
-    val taskSettingNodes = Seq(Keywords.Task.IGNORE_ERROR, Keywords.Task.COOLDOWN, Keywords.Task.ATTEMPT, Keywords.Task.CONDITION
-      ,Keywords.Task.VARIABLES, Keywords.Task.ASSERTION)
-    taskSettingNodes.foldLeft(result) {
-      (config: Config, inputNode: String) => parentNode.payload.getAs[ConfigValue](inputNode)
-        .map{x => config.withValue(inputNode, x)}
-        .getOrElse(config)
-    }
-  }
-
 
   /**
     * update the graph of the Dag by replacing editable Dag node with
@@ -187,19 +133,104 @@ object DagEditor {
 
 
   /**
+    * Inject imported module into Dag
+    * @param node
+    * @param referenceConfig
+    */
+  private[dag] class ModuleImporter(node: Node, referenceConfig: Config) {
+
+    val inline = "inline"
+    val file = "file"
+
+    /**
+      * process imported worklet node. The following changes are done
+      *   * change node dependencies with its modified new name
+      *   * change node settings with the settings inherited from the import node
+      * @param importedNodePayLoad
+      * @param parentNode
+      * @return
+      */
+    private def processImportedNode(importedNodePayLoad: Config, parentNode: Node) = {
+      val result = importedNodePayLoad.getAs[List[String]](Keywords.Task.DEPENDENCY) match {
+        case Some(dependency) => importedNodePayLoad.withValue(Keywords.Task.DEPENDENCY
+          ,ConfigValueFactory.fromIterable(dependency.map(x => s"${parentNode.name}$$$x").asJava))
+        case None => importedNodePayLoad
+      }
+      // Assertion is not added here because the assertion node must be added only in the last node(s) of the  Worklet
+      val taskSettingNodes = Seq(Keywords.Task.IGNORE_ERROR, Keywords.Task.COOLDOWN, Keywords.Task.ATTEMPT, Keywords.Task.CONDITION
+        ,Keywords.Task.VARIABLES, Keywords.Task.ASSERTION)
+      taskSettingNodes.foldLeft(result) {
+        (config: Config, inputNode: String) => parentNode.payload.getAs[ConfigValue](inputNode)
+          .map{x => config.withValue(inputNode, x)}
+          .getOrElse(config)
+      }
+    }
+
+
+    private def moduleConfig: Config = {
+      if (node.payload.hasPath(s"${Keywords.Task.PARAMS}.$file")) {
+        val fileName = node.payload.getConfig(Keywords.Task.PARAMS).root.keySet.asScala.filterNot(x => x == file)
+          .foldLeft(node.payload.as[Config](Keywords.Task.PARAMS))({case (acc, key) => acc.withoutPath(key)})
+          .hardResolve(referenceConfig)
+          .as[String](file)
+        ConfigFactory.parseFile(new File(fileName))
+      }
+      else if (node.payload.hasPath(s"${Keywords.Task.PARAMS}.$inline")) {
+        val worklet = node.payload.getConfig(Keywords.Task.PARAMS).root.keySet.asScala.filterNot(x => x == inline)
+          .foldLeft(node.payload.as[Config](Keywords.Task.PARAMS))({case (acc, key) => acc.withoutPath(key)})
+          .hardResolve(referenceConfig)
+          .as[String](inline)
+        referenceConfig.getConfig(Keywords.Config.WORKLET).as[Config](worklet)
+      }
+      else {
+        throw new IllegalArgumentException(s"$file or $inline field is expected for Import module")
+      }
+    }
+
+
+    /**
+      * import worklet module and prepare it for integration with main job
+      * @return
+      */
+    def importModule: (Seq[Node], Config) = {
+      var module: Config = moduleConfig
+      val nodeMap = Dag.extractTaskNodes(module)
+      val nodes = nodeMap.toSeq map {
+        case (name, payload) =>
+          // performing side-effect in map operation.
+          module = module
+            .withoutPath(name)
+            .withValue(s""""${node.name}$$$name"""", processImportedNode(payload, node).root())
+          Node(s"${node.name}$$$name", module.as[Config](s""""${node.name}$$$name""""))
+      }
+      val dag = Dag(nodes) // we create a dag object to link nodes and identify cycles.
+      node.payload.getAs[ConfigValue](Keywords.Task.ASSERTION) foreach {
+        assertion => dag.leafNodes.foreach(x => x.payload.withValue(Keywords.Task.ASSERTION, assertion))
+      }
+      dag.graph -> module
+    }
+
+  }
+
+
+  /**
     * this class processes a single node and expands it to several nodes based on its iteration logic
     * @param node
     */
-  private[dag] class NodeIterationProcessor(node: Node) {
+  private[dag] class NodeIterationProcessor(node: Node, referenceConfig: Config) {
 
     protected def iterationValue: (ConfigValue, Int, Boolean) = {
-      val iterateValue: ConfigValue = node.payload.as[ConfigValue](Keywords.Task.ITERATE)
+      val iterateValue: ConfigValue = node.payload.root.keySet.asScala.filterNot(_ == Keywords.Task.ITERATE)
+        .foldLeft(node.payload)({ case (acc, key) => acc.withoutPath(key)})
+        .hardResolve(referenceConfig).as[ConfigValue](Keywords.Task.ITERATE)
       iterateValue.valueType match {
         case ConfigValueType.STRING => (iterateValue, 1, false)
         case ConfigValueType.LIST => (iterateValue, 1, false)
         case ConfigValueType.OBJECT =>
           val x = iterateValue.asInstanceOf[ConfigObject].toConfig
-          (x.as[ConfigValue]("values"), x.getAs[Int]("group").getOrElse(1), x.getAs[Boolean]("allow-failure").getOrElse(false))
+          (x.as[ConfigValue]("values"),
+            x.getAs[Int]("group").getOrElse(1),
+            x.getAs[Boolean]("allow-failure").getOrElse(false))
         case _ => throw new RuntimeException(s"invalid config for ${Keywords.Task.ITERATE} for node ${node.name}")
       }
     }
