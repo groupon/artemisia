@@ -39,13 +39,15 @@ import com.groupon.artemisia.inventory.exceptions.UnknownComponentException
  */
 object Command {
 
-  def run(cmd_line_params: AppSetting) = {
+  def run(cmd_line_params: AppSetting): Unit = {
     val appContext = new AppContext(cmd_line_params)
+    appContext.init()
     Runner.run(appContext)
   }
 
-  def doc(cmdLineParam: AppSetting) = {
+  def doc(cmdLineParam: AppSetting): Unit = {
     val appContext = new AppContext(cmdLineParam)
+    appContext.init()
     println(getDoc(appContext, cmdLineParam))
   }
 

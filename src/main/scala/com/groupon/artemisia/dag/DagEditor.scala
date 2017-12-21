@@ -193,7 +193,7 @@ object DagEditor {
       * @return
       */
     def importModule: (Seq[Node], Config) = {
-      var module: Config = moduleConfig
+      var module = moduleConfig
       val nodeMap = Dag.extractTaskNodes(module)
       val nodes = nodeMap.toSeq map {
         case (name, payload) =>

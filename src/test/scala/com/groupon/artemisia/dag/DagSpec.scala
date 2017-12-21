@@ -36,12 +36,11 @@ import java.io.File
 
 import com.groupon.artemisia.TestSpec
 import com.groupon.artemisia.core.BasicCheckpointManager.CheckpointData
-import com.groupon.artemisia.core.Keywords
+import com.groupon.artemisia.core.{Keywords, TestAppContext}
 import com.groupon.artemisia.dag.Dag.Node
 import com.groupon.artemisia.dag.Message.TaskStats
 import com.groupon.artemisia.util.Util
 import com.typesafe.config.{Config, ConfigFactory}
-
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
@@ -244,15 +243,25 @@ class DagSpec extends TestSpec {
          |	"foo": "bar",
          |	"hello": "world",
          |  "baz": 10
+         |  task1 = {
+         |    Component = TestComponent
+         |    Task = TestTask
+         |    params = { foo = bar }
+         |  }
+         |
+         |  task2 = {
+         |    Component = TestComponent
+         |    Task = TestTask
+         |    params = { foo = bar }
+         |  }
          |}
        """.stripMargin
-    val dag =  new Dag(Nil, CheckpointData()) {
-      val contextConfig = referenceConfig(config)
-      contextConfig.root.keySet().asScala must contain only ("foo", "hello", "baz")
-      contextConfig.getString("foo") must be ("bar")
-      contextConfig.getString("hello") must be ("world")
-      contextConfig.getInt("baz") must be (10)
-    }
+    val appContext = new TestAppContext(config)
+    appContext.init()
+    val dag = Dag(appContext)
+    val contextConfig = dag.nodeReferenceConfig(config, dag.graph.filter(_.name == "task1").head)
+    contextConfig.getString("task2.params.foo") must be ("bar")
+    contextConfig.root.keySet.asScala must contain only ("task2")
   }
 
 }

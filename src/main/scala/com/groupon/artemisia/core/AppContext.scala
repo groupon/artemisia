@@ -64,23 +64,25 @@ class AppContext(private val cmdLineParam: AppSetting) {
     TaskContext.payload = config
     actualPayload = config
   }
-  actualPayload = getConfigObject
+  def logging: Logging =  AppContext.parseLoggingFromPayload(payload.as[Config](s"${Keywords.Config.SETTINGS_SECTION}.logging"))
+  def dagSetting: DagSetting = AppContext.parseDagSettingFromPayload(payload.as[Config](s"${Keywords.Config.SETTINGS_SECTION}.dag"))
+  def workingDir: String = computeWorkingDir
 
-  val logging: Logging =  AppContext.parseLoggingFromPayload(payload.as[Config](s"${Keywords.Config.SETTINGS_SECTION}.logging"))
-  val dagSetting: DagSetting = AppContext.parseDagSettingFromPayload(payload.as[Config](s"${Keywords.Config.SETTINGS_SECTION}.dag"))
-  val workingDir: String = computeWorkingDir
+  def init(): Unit = {
+    payload = getConfigObject
+    payload = checkpointMgr.checkpoints.adhocPayload withFallback payload
+    TaskContext.setWorkingDir(Paths.get(this.workingDir))
+  }
 
   // checkpointManager can be initialized only after working dir is initialized
   // and workdir can be initialized only after initial payload instance is initialized
 
-  private val checkpointMgr = if (skipCheckpoints) new BasicCheckpointManager else new FileCheckPointManager(checkpointFile)
-  payload = checkpointMgr.checkpoints.adhocPayload withFallback payload
+  protected val checkpointMgr: BasicCheckpointManager = if (skipCheckpoints)
+    new BasicCheckpointManager else new FileCheckPointManager(checkpointFile)
 
-  val componentMapper: Map[String,Component] = payload.asMap[String](s"${Keywords.Config.SETTINGS_SECTION}.components") map {
+  def componentMapper: Map[String,Component] = payload.asMap[String](s"${Keywords.Config.SETTINGS_SECTION}.components") map {
     case (name,component) => { (name, Class.forName(component).getConstructor(classOf[String]).newInstance(name).asInstanceOf[Component] ) }
   }
-
-  TaskContext.setWorkingDir(Paths.get(this.workingDir))
 
   /**
    * merge all config objects (Global, Code, Context) to provide unified code config object
