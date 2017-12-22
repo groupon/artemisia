@@ -33,13 +33,14 @@
 package com.groupon.artemisia.dag
 
 import java.io.File
-import com.groupon.artemisia.util.FileSystemUtil._
-import com.typesafe.config.{Config, ConfigFactory}
+
 import com.groupon.artemisia.TestSpec
 import com.groupon.artemisia.core.BasicCheckpointManager.CheckpointData
-import com.groupon.artemisia.core.{BasicCheckpointManager, Keywords}
+import com.groupon.artemisia.core.{Keywords, TestAppContext}
+import com.groupon.artemisia.dag.Dag.Node
 import com.groupon.artemisia.util.HoconConfigUtil.Handler
-import Dag.Node
+import com.typesafe.config.{Config, ConfigFactory}
+
 import scala.collection.JavaConverters._
 
 /**
@@ -50,63 +51,54 @@ class DagEditorSpec extends TestSpec {
 
   "DagEditor" must "expand iterable nodes" in {
     val file = this.getClass.getResource("/code/iteration_test.conf").getFile
-    val config = ConfigFactory parseFile new File(file)
-
-    val node4 = Node("step4", config.getConfig("step4"))
-    val node1 = Node("step1", config.getConfig("step1"))
-    val node2 = Node("step2", config.getConfig("step2"))
-    val node3 = Node("step3", config.getConfig("step3"))
-
-    val dag = new Dag(Seq(node1, node2, node3, node4), BasicCheckpointManager.CheckpointData(ConfigFactory.empty(), Map()))
-
+    val config = ConfigFactory.parseFile(new File(file))
+//    val node4 = Node("step4", config.getConfig("step4"))
+//    val node1 = Node("step1", config.getConfig("step1"))
+//    val node2 = Node("step2", config.getConfig("step2"))
+    val dag = Dag(new TestAppContext(config).init())
+    val node3 = dag.graph.filter(_.name == "step3").head
     val (Seq(node3a, node3b, node3c),modifiedConfig) = new DagEditor.NodeIterationProcessor(node3, config).expand
     node3a.successParents must be (Seq())
     node3b.successParents must be (Seq())
     node3c.successParents must be (Seq(node3a, node3b))
-
     DagEditor.replaceNode(dag, node3, Seq(node3a, node3b, node3c), CheckpointData())
     modifiedConfig.getAs[Config]("step3") must be (None)
-    modifiedConfig.getList(s""""step3$$1".${Keywords.Task.DEPENDENCY}.${Keywords.Task.SUCCESS_DEPENDENCY}""").unwrapped.asScala must be (Seq("step1", "step2"))
-    modifiedConfig.getList(s""""step3$$2".${Keywords.Task.DEPENDENCY}.${Keywords.Task.SUCCESS_DEPENDENCY}""").unwrapped.asScala must be (Seq("step1", "step2"))
-    modifiedConfig.getList(s""""step3$$3".${Keywords.Task.DEPENDENCY}.${Keywords.Task.SUCCESS_DEPENDENCY}""").unwrapped.asScala must be (Seq("step3$1", "step3$2"))
-
+    modifiedConfig.getList(s""""step3$$1".${Keywords.Task.DEPENDENCY}.${Keywords.Task.SUCCESS_DEPENDENCY}""")
+      .unwrapped.asScala must be (Seq("step1", "step2"))
+    modifiedConfig.getList(s""""step3$$2".${Keywords.Task.DEPENDENCY}.${Keywords.Task.SUCCESS_DEPENDENCY}""")
+      .unwrapped.asScala must be (Seq("step1", "step2"))
+    modifiedConfig.getList(s""""step3$$3".${Keywords.Task.DEPENDENCY}.${Keywords.Task.SUCCESS_DEPENDENCY}""")
+      .unwrapped.asScala must be (Seq("step3$1", "step3$2"))
   }
 
   it must "import worklets from file" in {
-    var config: Config = ConfigFactory.empty()
-    withTempFile(fileName = "worklet_import") {
-      file =>
-        file <<= TestUtils.worklet_file_import(this.getClass.getResource("/code/multi_step_addition_job.conf").getFile)
-        config = ConfigFactory.parseFile(file)
-    }
-    val node1 = Node("task1", config.as[Config]("task1"))
-    val node2 = Node("task2", config.as[Config]("task2"))
-    val node3 = Node("task3", config.as[Config]("task3"))
-    val dag = new Dag(Seq(node1, node2, node3), BasicCheckpointManager.CheckpointData(ConfigFactory.empty(), Map()))
-    val (Seq(node2a, node2b), modifiedConfig) = new DagEditor.ModuleImporter(node2, config).importModule match {
-      case (x: Seq[Node], y) => x.sortWith((node1, node2) => node1.name < node2.name) -> y
-    }
-    Seq(node2a.name, node2b.name) must contain only ("task2$step1","task2$step2")
-    modifiedConfig.as[Int]("bravo") must be (100)
-    node2b.successParents must contain only Node("task2$step1")
-    node2a.payload.as[Int]("params.num1") must be (10)
+     val config = ConfigFactory
+       .parseString(TestUtils.worklet_file_import(this.getClass.getResource("/code/multi_step_addition_job.conf").getFile))
+     val appContext = new TestAppContext(config).init()
+     val dag = Dag(appContext)
+     val node2 = dag.graph.filter(_.name == "task2").head
+     val (Seq(node2a, node2b), modifiedConfig) = new DagEditor.ModuleImporter(node2, config).importModule match {
+       case (x: Seq[Node], y) => x.sortWith((node1, node2) => node1.name < node2.name) -> y
+     }
+     Seq(node2a.name, node2b.name) must contain only("task2$step1", "task2$step2")
+     modifiedConfig.as[Int]("bravo") must be(100)
+     node2b.successParents must contain only Node("task2$step1")
+     node2a.payload.as[Config](s""""${node2a.name}"""").as[Int]("params.num1") must be(10)
+    System.err.println("")
   }
 
 
   it must "import worklet from inline" in  {
 
-    val config = ConfigFactory parseFile new File(this.getClass.getResource("/code/worklet_node_import.conf").getFile)
-    val node1 = Node("task1", config.as[Config]("task1"))
-    val node2 = Node("task2", config.as[Config]("task2"))
-    val node3 = Node("task3", config.as[Config]("task3"))
-    val dag = new Dag(Seq(node1, node2, node3), BasicCheckpointManager.CheckpointData(ConfigFactory.empty(), Map()))
+    val config = ConfigFactory.parseFile(new File(this.getClass.getResource("/code/worklet_node_import.conf").getFile))
+    val dag = Dag(new TestAppContext(config).init())
+    val node2 = dag.graph.filter(_.name == "task2").head
     val (Seq(node2a, node2b), modifiedConfig) = new DagEditor.ModuleImporter(node2, config).importModule match {
       case (x: Seq[Node], y) => x.sortWith((node1, node2) => node1.name < node2.name) -> y
     }
     Seq(node2a.name, node2b.name) must contain only ("task2$step1","task2$step2")
     modifiedConfig.as[Int]("deadpool") must be (20)
     node2b.successParents must contain only Node("task2$step1")
-
   }
 
 }

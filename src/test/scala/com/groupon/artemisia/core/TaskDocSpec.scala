@@ -40,8 +40,7 @@ class TaskDocSpec extends TestSpec {
 
   "Command" must "fetch Component doc when requested" in {
       val appSetting = AppSetting(cmd = Some("doc"), component = Some("TestComponent"), task = None)
-      val appContext = new AppContext(appSetting)
-      appContext.init()
+      val appContext = new AppContext(appSetting).init()
       val result = Command.getDoc(appContext, appSetting)
       val expectedResult =
       """!| Task           | Description     |
@@ -54,16 +53,14 @@ class TaskDocSpec extends TestSpec {
 
   it must "fetch task doc when requested" in {
       val appSetting = AppSetting(cmd = Some("doc"), component = Some("TestComponent"), task = Some("TestAdderTask"))
-      val appContext = new AppContext(appSetting)
-      appContext.init()
+      val appContext = new AppContext(appSetting).init()
       val result = Command.getDoc(appContext, appSetting)
       result must be("TestAdderTask is a test addition task")
   }
 
   it must "must fetch component list" in {
       val appSetting = AppSetting(cmd = Some("doc"), component = None, task = None)
-      val appContext = new AppContext(appSetting)
-      appContext.init()
+      val appContext = new AppContext(appSetting).init()
       val result = Command.getDoc(appContext, appSetting)
       result must be("TestComponent => This is a TestComponent")
   }

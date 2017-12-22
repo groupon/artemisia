@@ -18,8 +18,9 @@ class TestAppContext(config: Config) extends AppContext(AppSetting()) {
   override val checkpointMgr = new BasicCheckpointManager()
   override val componentMapper: Map[String,Component] = Map()
 
-  override def init(): Unit = {
+  override def init(): AppContext = {
     payload = getConfigObject
+    this
   }
 
 }

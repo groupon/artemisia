@@ -68,10 +68,11 @@ class AppContext(private val cmdLineParam: AppSetting) {
   def dagSetting: DagSetting = AppContext.parseDagSettingFromPayload(payload.as[Config](s"${Keywords.Config.SETTINGS_SECTION}.dag"))
   def workingDir: String = computeWorkingDir
 
-  def init(): Unit = {
+  def init(): AppContext = {
     payload = getConfigObject
     payload = checkpointMgr.checkpoints.adhocPayload withFallback payload
     TaskContext.setWorkingDir(Paths.get(this.workingDir))
+    this
   }
 
   // checkpointManager can be initialized only after working dir is initialized

@@ -37,8 +37,9 @@ import java.io.File
 import com.groupon.artemisia.core.BasicCheckpointManager.CheckpointData
 import com.groupon.artemisia.core.Keywords
 import com.groupon.artemisia.dag.Dag.Node
+import com.groupon.artemisia.util.HoconConfigUtil.Handler
 import com.typesafe.config._
-import com.groupon.artemisia.util.HoconConfigUtil.{Handler, configToConfigEnhancer}
+
 import scala.collection.JavaConverters._
 import scala.reflect.runtime.universe
 import scala.tools.reflect.ToolBox
@@ -150,7 +151,7 @@ object DagEditor {
       * @param parentNode
       * @return
       */
-    private def processImportedNode(importedNodePayLoad: Config, parentNode: Node) = {
+    private def processImportedNode(importedNodePayLoad: Config, parentNode: Node): Config = {
       val result = importedNodePayLoad.getAs[List[String]](Keywords.Task.DEPENDENCY) match {
         case Some(dependency) => importedNodePayLoad.withValue(Keywords.Task.DEPENDENCY
           ,ConfigValueFactory.fromIterable(dependency.map(x => s"${parentNode.name}$$$x").asJava))
@@ -168,18 +169,12 @@ object DagEditor {
 
 
     private def moduleConfig: Config = {
-      if (node.payload.hasPath(s"${Keywords.Task.PARAMS}.$file")) {
-        val fileName = node.payload.getConfig(Keywords.Task.PARAMS).root.keySet.asScala.filterNot(x => x == file)
-          .foldLeft(node.payload.as[Config](Keywords.Task.PARAMS))({case (acc, key) => acc.withoutPath(key)})
-          .hardResolve(referenceConfig)
-          .as[String](file)
+      if (node.payload.as[Config](node.name).hasPath(s"${Keywords.Task.PARAMS}.$file")) {
+        val fileName = node.payload.as[Config](node.name).as[String](s"${Keywords.Task.PARAMS}.$file")
         ConfigFactory.parseFile(new File(fileName))
       }
-      else if (node.payload.hasPath(s"${Keywords.Task.PARAMS}.$inline")) {
-        val worklet = node.payload.getConfig(Keywords.Task.PARAMS).root.keySet.asScala.filterNot(x => x == inline)
-          .foldLeft(node.payload.as[Config](Keywords.Task.PARAMS))({case (acc, key) => acc.withoutPath(key)})
-          .hardResolve(referenceConfig)
-          .as[String](inline)
+      else if (node.payload.as[Config](node.name).hasPath(s"${Keywords.Task.PARAMS}.$inline")) {
+        val worklet = node.payload.as[Config](node.name).as[String](s"${Keywords.Task.PARAMS}.$inline")
         referenceConfig.getConfig(Keywords.Config.WORKLET).as[Config](worklet)
       }
       else {
@@ -193,21 +188,15 @@ object DagEditor {
       * @return
       */
     def importModule: (Seq[Node], Config) = {
-      var module = moduleConfig
-      val nodeMap = Dag.extractTaskNodes(module)
-      val nodes = nodeMap.toSeq map {
-        case (name, payload) =>
-          // performing side-effect in map operation.
-          module = module
-            .withoutPath(name)
-            .withValue(s""""${node.name}$$$name"""", processImportedNode(payload, node).root())
-          Node(s"${node.name}$$$name", module.as[Config](s""""${node.name}$$$name""""))
-      }
+      val module = moduleConfig
+      val nodes = Dag.extractTaskNodes(module).toSeq.map({case (name, payload) =>
+        Node(s"${node.name}$$$name", payload.withoutPath(name).withValue(s""""${node.name}$$$name"""",
+          processImportedNode(payload.as[Config](name) ,node).root))})
       val dag = Dag(nodes) // we create a dag object to link nodes and identify cycles.
       node.payload.getAs[ConfigValue](Keywords.Task.ASSERTION) foreach {
         assertion => dag.leafNodes.foreach(x => x.payload.withValue(Keywords.Task.ASSERTION, assertion))
       }
-      dag.graph -> module
+      dag.graph -> nodes.foldLeft(ConfigFactory.empty)({ case (acc, item) => acc withFallback item.payload })
     }
 
   }
@@ -220,9 +209,8 @@ object DagEditor {
   private[dag] class NodeIterationProcessor(node: Node, referenceConfig: Config) {
 
     protected def iterationValue: (ConfigValue, Int, Boolean) = {
-      val iterateValue: ConfigValue = node.payload.root.keySet.asScala.filterNot(_ == Keywords.Task.ITERATE)
-        .foldLeft(node.payload)({ case (acc, key) => acc.withoutPath(key)})
-        .hardResolve(referenceConfig).as[ConfigValue](Keywords.Task.ITERATE)
+      val iterateValue: ConfigValue = node.payload.as[Config](s""""${node.name}"""")
+        .as[ConfigValue](s"${Keywords.Task.ITERATE}")
       iterateValue.valueType match {
         case ConfigValueType.STRING => (iterateValue, 1, false)
         case ConfigValueType.LIST => (iterateValue, 1, false)
@@ -270,10 +258,11 @@ object DagEditor {
       }
       val nodes = for (i <- 1 to valueList.size) yield {
         Node(s"${node.name}$$$i",
-          node.payload.withoutPath(Keywords.Task.ITERATE)
-            .withValue(Keywords.Task.VARIABLES, valueList(i-1)
-              .withFallback(node.payload.getAs[Config](Keywords.Task.VARIABLES).getOrElse(ConfigFactory.empty)))
-        )
+          node.payload.withoutPath(s""""${node.name}"""")
+            .withValue(s""""${node.name}$$$i"""", node.payload.as[Config](s""""${node.name}"""")
+              .withoutPath(Keywords.Task.ITERATE).withValue(Keywords.Task.VARIABLES,
+              valueList(i-1).withFallback(node.payload.as[Config](s""""${node.name}"""")
+                .getAs[Config](Keywords.Task.VARIABLES).getOrElse(ConfigFactory.empty))).root()))
       }
       nodes.sliding(groupSize,groupSize).sliding(2,1) foreach {
         case parents :: children :: Nil => for(child <- children) {
@@ -282,8 +271,7 @@ object DagEditor {
         case _ :: Nil => ()
       }
       val outputConfig = nodes.foldLeft(ConfigFactory.empty) {
-        case (carry, inputNode) => carry.withFallback(ConfigFactory.empty.withValue(s""""${inputNode.name}"""",
-          inputNode.payload.root()))
+        case (carry, inputNode) => carry.withFallback(inputNode.payload)
       }
       nodes -> outputConfig
     }

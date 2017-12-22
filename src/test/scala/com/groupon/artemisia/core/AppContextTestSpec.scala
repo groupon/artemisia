@@ -53,8 +53,7 @@ class AppContextTestSpec extends TestSpec {
 
   "The Config Object" must s"Read the Global File and merge it with default config file" in {
 
-      val app_context = new AppContext(AppContextTestSpec.defaultTestCmdLineParams)
-      app_context.init()
+      val app_context = new AppContext(AppContextTestSpec.defaultTestCmdLineParams).init()
       app_context.payload = app_context.payload.resolve()
       info("checking if job_config is in effect")
       app_context.payload.as[String]("dummy_step1.config.table") must be ("dummy_table")
@@ -102,8 +101,7 @@ class AppContextTestSpec extends TestSpec {
       workingDir => {
         val task_name = "dummy_task"
         val cmd = AppContextTestSpec.defaultTestCmdLineParams.copy(working_dir = Some(workingDir.toString))
-        val appContext = new AppContext(cmd)
-        appContext.init()
+        val appContext = new AppContext(cmd).init()
         appContext.commitCheckpoint(task_name, AppContextTestSpec.getTaskStatsConfigObject)
         val checkpoint = ConfigFactory.parseFile(new File(FileSystemUtil.joinPath(workingDir.toString, "checkpoint.conf")))
         info("validating end-time")
@@ -140,8 +138,7 @@ class AppContextTestSpec extends TestSpec {
             |}
           """.stripMargin
         val cmd = AppContextTestSpec.defaultTestCmdLineParams.copy(working_dir = Some(workingDir.toString))
-        val appContext = new AppContext(cmd)
-        appContext.init()
+        val appContext = new AppContext(cmd).init()
         val task_stats = appContext.checkpoints.taskStatRepo(task_name)
         info("validating end_time")
         task_stats.endTime must be("2016-05-23 23:11:07")
@@ -154,8 +151,7 @@ class AppContextTestSpec extends TestSpec {
   it must "make working_dir is configurable from cmdline" in {
     val workingDir = "/var/tmp"
     val cmdLineParam = AppContextTestSpec.defaultTestCmdLineParams.copy(working_dir = Some(workingDir))
-    val appContext = new AppContext(cmdLineParam)
-    appContext.init()
+    val appContext = new AppContext(cmdLineParam).init()
     appContext.workingDir must be (workingDir)
   }
 
@@ -174,8 +170,7 @@ class AppContextTestSpec extends TestSpec {
           """.stripMargin
         val appSetting = AppSetting(cmd=Some("run"), value = Some(file.toString), run_id = Some(runID))
         info(appSetting.value.get)
-        val appContext = new AppContext(appSetting)
-        appContext.init()
+        val appContext = new AppContext(appSetting).init()
         appContext.workingDir must be (FileSystemUtil.joinPath(workingDir,runID))
       }
     }

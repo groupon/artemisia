@@ -319,10 +319,10 @@ private[dag] class Dag(var graph: Seq[Node], checkpointData: CheckpointData) {
 object Dag {
 
   def apply(appContext: AppContext): Dag = {
-    val node_list = extractTaskNodes(appContext.payload) map {
+    val nodeList = extractTaskNodes(appContext.payload) map {
       case (name, payload) => Node(name, payload)
     }
-    new Dag(node_list.toList, appContext.checkpoints)
+    new Dag(nodeList.toList, appContext.checkpoints)
   }
 
 
@@ -385,8 +385,9 @@ object Dag {
       * @param nodes new parents for the
       */
     def successParents_=(nodes: Seq[Node]) = {
-      payload = ConfigFactory.empty().withValue(s"${Keywords.Task.DEPENDENCY}.${Keywords.Task.SUCCESS_DEPENDENCY}",
-        ConfigValueFactory.fromIterable(nodes.map(_.name).asJava)) withFallback payload
+      payload = payload.withValue(s""""$name"""", payload.as[Config](s""""$name"""")
+        .withValue(s"${Keywords.Task.DEPENDENCY}.${Keywords.Task.SUCCESS_DEPENDENCY}",
+        ConfigValueFactory.fromIterable(nodes.map(_.name).asJava)).root)
       _success = nodes
     }
 
@@ -417,8 +418,9 @@ object Dag {
       * @param nodes new parents for the
       */
     def failParents_=(nodes: Seq[Node]) = {
-      payload = ConfigFactory.empty().withValue(s"${Keywords.Task.DEPENDENCY}.${Keywords.Task.FAIL_DEPENDENCY}",
-        ConfigValueFactory.fromIterable(nodes.map(_.name).asJava)) withFallback payload
+      payload = payload.withValue(s""""$name"""", payload.as[Config](s""""$name"""")
+        .withValue(s"${Keywords.Task.DEPENDENCY}.${Keywords.Task.FAIL_DEPENDENCY}",
+          ConfigValueFactory.fromIterable(nodes.map(_.name).asJava)).root)
       _fail = nodes
     }
 
@@ -436,8 +438,9 @@ object Dag {
       * @param nodes new parents for the
       */
     def completeParents_=(nodes: Seq[Node]) = {
-      payload = ConfigFactory.empty().withValue(s"${Keywords.Task.DEPENDENCY}.${Keywords.Task.COMPLETE_DEPENDENCY}",
-        ConfigValueFactory.fromIterable(nodes.map(_.name).asJava)) withFallback payload
+      payload = payload.withValue(s""""$name"""", payload.as[Config](s""""$name"""")
+        .withValue(s"${Keywords.Task.DEPENDENCY}.${Keywords.Task.COMPLETE_DEPENDENCY}",
+          ConfigValueFactory.fromIterable(nodes.map(_.name).asJava)).root)
       _complete = nodes
     }
 
@@ -466,12 +469,12 @@ object Dag {
     protected[Dag] def parseDependencyFromConfig: (Seq[String], Seq[String], Seq[String]) = {
       val dependencyFields = Seq(Keywords.Task.SUCCESS_DEPENDENCY, Keywords.Task.FAIL_DEPENDENCY,
         Keywords.Task.COMPLETE_DEPENDENCY)
-      payload.getAs[ConfigValue](Keywords.Task.DEPENDENCY) match {
+      payload.as[Config](s""""$name"""").getAs[ConfigValue](Keywords.Task.DEPENDENCY) match {
         case None => (Nil, Nil, Nil)
         case Some(x) if x.valueType() == ConfigValueType.LIST =>
-          (payload.as[List[String]](Keywords.Task.DEPENDENCY), Nil, Nil)
+          (payload.as[Config](s""""$name"""").as[List[String]](Keywords.Task.DEPENDENCY), Nil, Nil)
         case Some(x) if x.valueType() == ConfigValueType.OBJECT =>
-          val rootConfig = payload.as[Config](Keywords.Task.DEPENDENCY)
+          val rootConfig = payload.as[Config](s""""$name"""").as[Config](Keywords.Task.DEPENDENCY)
           require(rootConfig.root.keySet.asScala.forall(dependencyFields.contains),
             s"dependency field object can have only the following fields: ${dependencyFields.mkString}")
           (rootConfig.getAs[List[String]](Keywords.Task.SUCCESS_DEPENDENCY).getOrElse(Nil),
