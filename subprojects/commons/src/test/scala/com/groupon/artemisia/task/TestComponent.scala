@@ -33,6 +33,8 @@
 package com.groupon.artemisia.task
 
 import com.typesafe.config.{Config, ConfigFactory}
+import java.util
+import scala.collection.JavaConverters._
 
 /**
  * Created by chlr on 1/26/16.
@@ -41,7 +43,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 class TestComponent(name: String) extends Component(name) {
 
   override val info: String = "This is a TestComponent"
-  override val tasks: Seq[TaskLike] = Seq(TestAdderTask, TestFailTask)
+  override val tasks: util.List[_ <: BaseTaskLike] = Seq(TestAdderTask, TestFailTask).asJava
   override val defaultConfig: Config = ConfigFactory parseString
     s"""
        | {

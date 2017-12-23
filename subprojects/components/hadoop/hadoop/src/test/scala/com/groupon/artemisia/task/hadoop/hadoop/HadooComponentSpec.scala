@@ -48,7 +48,7 @@ class HadooComponentSpec extends TestSpec {
 
   it must "generate doc without throwing exceptions" in {
     val comp = new HadoopComponent("hadoop")
-    for (task <- comp.tasks) {
+    for (task <- comp.normalizedTasks) {
       task.doc("hadoop")
     }
 

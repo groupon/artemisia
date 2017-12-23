@@ -36,6 +36,7 @@ import java.nio.file.Paths
 import com.typesafe.config.ConfigFactory
 import com.groupon.artemisia.TestSpec
 import com.groupon.artemisia.core.Keywords
+import scala.collection.JavaConverters._
 
 /**
   * Created by chlr on 6/6/16.
@@ -126,7 +127,7 @@ class MySQLComponentSpec extends TestSpec {
 
 
   it must "spew out doc for all tasks" in {
-    for (task <- component.tasks) {
+    for (task <- component.tasks.asScala) {
       component.taskDoc(task.taskName).trim.length must be > 1
     }
   }
