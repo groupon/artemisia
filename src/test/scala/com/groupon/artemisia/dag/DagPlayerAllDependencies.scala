@@ -39,8 +39,6 @@ import com.groupon.artemisia.core.{AppContext, AppSetting}
 import com.groupon.artemisia.dag.Message._
 import com.groupon.artemisia.task.{TaskHandler, TestAdderTask, TestFailTask}
 
-import scala.util.{Failure, Try}
-
 /**
   * Created by chlr on 12/30/16.
   */
@@ -65,15 +63,11 @@ class DagPlayerAllDependencies extends ActorTestSpec {
 
 
     dag_player ! Tick
-    Try(
     probe.validateAndRelayMessages(2, workers) {
       case x@TaskWrapper("step1", handler1) :: TaskWrapper("step2", handler2) :: Nil =>
         handler1.task mustBe a[TestAdderTask]
         handler2.task mustBe a[TestFailTask]
       case x => fail(s"received unexpected messages")
-    }
-    ) match {
-      case Failure(th) => th.printStackTrace(System.err)
     }
 
     probe.validateAndRelayMessages(2, dag_player) {

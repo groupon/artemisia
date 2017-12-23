@@ -55,7 +55,7 @@ class HoconConfigEnhancer(val root: Config)  {
 
   def hardResolve(reference: Config = root) = {
     this.reference = reference
-    resolveConfig(root.resolveWith(reference))
+    resolveConfig(root.resolve)
   }
 
   private def resolveConfig(config: Config): Config = {

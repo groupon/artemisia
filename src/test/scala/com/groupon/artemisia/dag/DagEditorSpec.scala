@@ -84,7 +84,6 @@ class DagEditorSpec extends TestSpec {
      modifiedConfig.as[Int]("bravo") must be(100)
      node2b.successParents must contain only Node("task2$step1")
      node2a.payload.as[Config](s""""${node2a.name}"""").as[Int]("params.num1") must be(10)
-    System.err.println("")
   }
 
 

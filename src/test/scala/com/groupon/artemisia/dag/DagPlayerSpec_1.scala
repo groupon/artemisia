@@ -64,7 +64,6 @@ class DagPlayerSpec_1 extends ActorTestSpec {
     setUpArtifacts(this.getClass.getResource("/code/multi_step_addition_job.conf").getFile)
     info("Sending tick 1")
     dag_player ! Tick
-
     probe.validateAndRelay(workers) {
       case TaskWrapper("step1",task_handler: TaskHandler) => {
         task_handler.task mustBe a[TestAdderTask]
@@ -182,7 +181,7 @@ class DagPlayerSpec_1 extends ActorTestSpec {
 
   def setUpArtifacts(code: String) = {
     app_settings = AppSetting(value = Some(code),skip_checkpoints = true)
-    app_context = new AppContext(app_settings)
+    app_context = new AppContext(app_settings).init()
     dag = Dag(app_context)
     dag_player = system.actorOf(Props(new DagPlayer(dag,app_context,probe.ref)))
   }

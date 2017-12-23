@@ -230,7 +230,7 @@ class DagPlayerSpec_2 extends ActorTestSpec {
 
   def setUpArtifacts(code: String) = {
     app_settings = AppSetting(value = Some(code),skip_checkpoints = true)
-    app_context = new AppContext(app_settings)
+    app_context = new AppContext(app_settings).init()
     dag = Dag(app_context)
     dag_player = system.actorOf(Props(new DagPlayer(dag,app_context,probe.ref)))
   }

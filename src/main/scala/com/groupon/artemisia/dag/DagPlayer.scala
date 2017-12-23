@@ -35,9 +35,9 @@ package com.groupon.artemisia.dag
 import java.util.concurrent.TimeUnit
 
 import akka.actor.{Actor, ActorRef}
+import com.groupon.artemisia.core.AppLogger._
 import com.groupon.artemisia.core.{AppContext, AppLogger, Keywords}
 import com.groupon.artemisia.dag.Message.{TaskFailed, TaskStats, TaskSucceeded, Tick, _}
-import com.groupon.artemisia.core.AppLogger._
 import com.groupon.artemisia.task.TaskHandler
 
 import scala.collection.Seq
@@ -73,12 +73,10 @@ class DagPlayer(val dag: Dag, appContext: AppContext, val router: ActorRef) exte
   override def receive: Receive = preReceive andThen (healthyDag orElse onTaskComplete orElse play)
 
   def healthyDag: Receive = {
-    case Tick =>
-      if (dag.hasCompleted) {
+    case Tick if dag.hasCompleted =>
         info("all tasks completed. System shutting down")
         context.system.shutdown()
-      }
-      else {
+    case Tick =>
         dag.getRunnableTasks(appContext) match {
           case Success(tasks) => processNodes(tasks)
           case Failure(th) =>
@@ -86,7 +84,6 @@ class DagPlayer(val dag: Dag, appContext: AppContext, val router: ActorRef) exte
             dag.nodesWithStatus(Status.READY).foreach(x => dag.setNodeStatus(x.name, Status.INIT_FAILED))
             context.become(preReceive andThen (woundedDag orElse onTaskComplete))
         }
-      }
     }
 
 
@@ -107,7 +104,8 @@ class DagPlayer(val dag: Dag, appContext: AppContext, val router: ActorRef) exte
   }
 
   def preReceive: PartialFunction[Any, Any] = {
-    case x: Any => Thread.currentThread().setName(Keywords.APP); x
+    case x: Any =>
+      Thread.currentThread().setName(Keywords.APP); x
   }
 
   def woundedDag: Receive = {

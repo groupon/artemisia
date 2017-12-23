@@ -32,8 +32,8 @@
 
 package com.groupon.artemisia.task
 
-import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
 import com.groupon.artemisia.util.HoconConfigUtil.Handler
+import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
 
 /**
  * Created by chlr on 1/26/16.

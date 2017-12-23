@@ -33,13 +33,11 @@
 package com.groupon.artemisia.dag
 
 import java.io.File
-
 import com.groupon.artemisia.core.BasicCheckpointManager.CheckpointData
 import com.groupon.artemisia.core.Keywords
 import com.groupon.artemisia.dag.Dag.Node
 import com.groupon.artemisia.util.HoconConfigUtil.Handler
 import com.typesafe.config._
-
 import scala.collection.JavaConverters._
 import scala.reflect.runtime.universe
 import scala.tools.reflect.ToolBox
@@ -90,7 +88,7 @@ object DagEditor {
     * @param node input node
     * @return
     */
-  private def isIterableNode(node: Node) = node.payload.hasPath(Keywords.Task.ITERATE)
+  private def isIterableNode(node: Node) = node.payload.as[Config](s""""${node.name}"""").hasPath(Keywords.Task.ITERATE)
 
 
   /**
@@ -99,8 +97,8 @@ object DagEditor {
     * @return
     */
   private def isWorkletNode(node: Node) = {
-    (node.payload.getString(Keywords.Task.COMPONENT) == Keywords.DagEditor.Component) &&
-      (node.payload.getString(Keywords.Task.TASK) == Keywords.DagEditor.Task)
+    (node.payload.as[Config](s""""${node.name}"""").getString(Keywords.Task.COMPONENT) == Keywords.DagEditor.Component) &&
+      (node.payload.as[Config](s""""${node.name}"""").getString(Keywords.Task.TASK) == Keywords.DagEditor.Task)
   }
 
 
@@ -150,16 +148,32 @@ object DagEditor {
       * @param importedNodePayLoad
       * @param parentNode
       * @return
+      * @todo support dependencies of type object
       */
     private def processImportedNode(importedNodePayLoad: Config, parentNode: Node): Config = {
-      val result = importedNodePayLoad.getAs[List[String]](Keywords.Task.DEPENDENCY) match {
-        case Some(dependency) => importedNodePayLoad.withValue(Keywords.Task.DEPENDENCY
-          ,ConfigValueFactory.fromIterable(dependency.map(x => s"${parentNode.name}$$$x").asJava))
+      System.err.println(importedNodePayLoad.root().render(ConfigRenderOptions.concise()))
+      System.err.println(parentNode.payload.root().render(ConfigRenderOptions.concise()))
+      val result = importedNodePayLoad.getAs[ConfigValue](Keywords.Task.DEPENDENCY).map(_.valueType()) match {
+        case Some(ConfigValueType.LIST) =>
+          importedNodePayLoad.withValue(Keywords.Task.DEPENDENCY, ConfigValueFactory.fromIterable(
+            parentNode.payload.as[List[String]](Keywords.Task.DEPENDENCY).map(x => s"${parentNode.name}$$$x").asJava))
+        case Some(ConfigValueType.OBJECT) =>
+          importedNodePayLoad.withValue(Keywords.Task.DEPENDENCY, Seq(Keywords.Task.COMPLETE_DEPENDENCY,
+            Keywords.Task.FAIL_DEPENDENCY, Keywords.Task.SUCCESS_DEPENDENCY).foldLeft(ConfigFactory.empty)({
+            case (acc, item) => acc.withValue(item, ConfigValueFactory.fromIterable(
+              parentNode.payload.as[List[String]](s"${Keywords.Task.DEPENDENCY}.$item")
+                .map(x => s"${parentNode.name}$$$x").asJava))}).root())
         case None => importedNodePayLoad
       }
+      ConfigResolveOptions.noSystem()
+//      val result = importedNodePayLoad.getAs[List[String]](Keywords.Task.DEPENDENCY) match {
+//        case Some(dependency) => importedNodePayLoad.withValue(Keywords.Task.DEPENDENCY
+//          ,ConfigValueFactory.fromIterable(dependency.map(x => s"${parentNode.name}$$$x").asJava))
+//        case None => importedNodePayLoad
+//      }
       // Assertion is not added here because the assertion node must be added only in the last node(s) of the  Worklet
-      val taskSettingNodes = Seq(Keywords.Task.IGNORE_ERROR, Keywords.Task.COOLDOWN, Keywords.Task.ATTEMPT, Keywords.Task.CONDITION
-        ,Keywords.Task.VARIABLES, Keywords.Task.ASSERTION)
+      val taskSettingNodes = Seq(Keywords.Task.IGNORE_ERROR, Keywords.Task.COOLDOWN, Keywords.Task.ATTEMPT,
+        Keywords.Task.CONDITION, Keywords.Task.VARIABLES, Keywords.Task.ASSERTION)
       taskSettingNodes.foldLeft(result) {
         (config: Config, inputNode: String) => parentNode.payload.getAs[ConfigValue](inputNode)
           .map{x => config.withValue(inputNode, x)}
@@ -169,12 +183,12 @@ object DagEditor {
 
 
     private def moduleConfig: Config = {
-      if (node.payload.as[Config](node.name).hasPath(s"${Keywords.Task.PARAMS}.$file")) {
-        val fileName = node.payload.as[Config](node.name).as[String](s"${Keywords.Task.PARAMS}.$file")
+      if (node.payload.as[Config](s""""${node.name}"""").hasPath(s"${Keywords.Task.PARAMS}.$file")) {
+        val fileName = node.payload.as[Config](s""""${node.name}"""").as[String](s"${Keywords.Task.PARAMS}.$file")
         ConfigFactory.parseFile(new File(fileName))
       }
-      else if (node.payload.as[Config](node.name).hasPath(s"${Keywords.Task.PARAMS}.$inline")) {
-        val worklet = node.payload.as[Config](node.name).as[String](s"${Keywords.Task.PARAMS}.$inline")
+      else if (node.payload.as[Config](s""""${node.name}"""").hasPath(s"${Keywords.Task.PARAMS}.$inline")) {
+        val worklet = node.payload.as[Config](s""""${node.name}"""").as[String](s"${Keywords.Task.PARAMS}.$inline")
         referenceConfig.getConfig(Keywords.Config.WORKLET).as[Config](worklet)
       }
       else {
@@ -191,7 +205,7 @@ object DagEditor {
       val module = moduleConfig
       val nodes = Dag.extractTaskNodes(module).toSeq.map({case (name, payload) =>
         Node(s"${node.name}$$$name", payload.withoutPath(name).withValue(s""""${node.name}$$$name"""",
-          processImportedNode(payload.as[Config](name) ,node).root))})
+          processImportedNode(payload.as[Config](s""""$name"""") ,node).root))})
       val dag = Dag(nodes) // we create a dag object to link nodes and identify cycles.
       node.payload.getAs[ConfigValue](Keywords.Task.ASSERTION) foreach {
         assertion => dag.leafNodes.foreach(x => x.payload.withValue(Keywords.Task.ASSERTION, assertion))
