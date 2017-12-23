@@ -32,10 +32,14 @@
 
 package com.groupon.artemisia.task.database.teradata
 
-import com.typesafe.config.{Config, ConfigFactory}
+import java.util
+
 import com.groupon.artemisia.task.database.teradata.tdch.{TDCHExtract, TDCHLoad}
 import com.groupon.artemisia.task.database.teradata.tpt.{TPTLoadFromFile, TPTLoadFromHDFS}
-import com.groupon.artemisia.task.{Component, TaskLike}
+import com.groupon.artemisia.task.{BaseTaskLike, Component}
+import com.typesafe.config.{Config, ConfigFactory}
+
+import scala.collection.JavaConverters._
 
 /**
   * Created by chlr on 6/26/16.
@@ -43,8 +47,8 @@ import com.groupon.artemisia.task.{Component, TaskLike}
 
 class TeraComponent(name: String) extends Component(name: String) {
 
-  override val tasks: Seq[TaskLike] = Seq(SQLExecute, SQLRead, LoadFromFile, ExportToFile, ExportToHDFS, LoadFromHDFS,
-    TDCHLoad, TDCHExtract, TPTLoadFromFile, TPTLoadFromHDFS)
+  override val tasks: util.List[_ <: BaseTaskLike] = Seq(SQLExecute, SQLRead, LoadFromFile, ExportToFile, ExportToHDFS,
+    LoadFromHDFS, TDCHLoad, TDCHExtract, TPTLoadFromFile, TPTLoadFromHDFS).asJava
 
   override val defaultConfig: Config = ConfigFactory parseString
     """

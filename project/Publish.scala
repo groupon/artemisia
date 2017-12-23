@@ -48,8 +48,8 @@ object Publish {
     pomIncludeRepository := { _ => false },
     pomExtra := <url>http://artemisia.readthedocs.io/en/latest/</url>
       <scm>
-        <url>git@github.groupondev.com:chlr/Artemisia.git</url>
-        <connection>scm:git:git@github.groupondev.com.com:chlr/Artemisia.git</connection>
+        <url>git@github.com:groupon/artemisia.git</url>
+        <connection>scm:git:git@github.com:groupon/artemisia.git</connection>
       </scm>
       <developers>
         <developer>

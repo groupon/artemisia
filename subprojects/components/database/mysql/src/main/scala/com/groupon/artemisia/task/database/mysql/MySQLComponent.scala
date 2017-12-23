@@ -32,8 +32,10 @@
 
 package com.groupon.artemisia.task.database.mysql
 
-import com.typesafe.config.ConfigFactory
+import java.util
 import com.groupon.artemisia.task.{Component, TaskLike}
+import com.typesafe.config.{Config, ConfigFactory}
+import scala.collection.JavaConverters._
 
 /**
  * Created by chlr on 4/8/16.
@@ -41,14 +43,15 @@ import com.groupon.artemisia.task.{Component, TaskLike}
 
 class MySQLComponent(componentName: String) extends Component(componentName) {
 
-  override val defaultConfig = ConfigFactory parseString
+  override val defaultConfig: Config = ConfigFactory parseString
     """
       | {
       | dsn = { port: 3306 }
       | }
     """.stripMargin
 
-  override val tasks: Seq[TaskLike] = Seq(ExportToFile, LoadFromFile, SQLExecute, SQLRead, ExportToHDFS, LoadFromHDFS)
+  override val tasks: util.List[TaskLike] = Seq(ExportToFile, LoadFromFile, SQLExecute, SQLRead, ExportToHDFS,
+    LoadFromHDFS).asJava
 
   override val info: String = "This components provides tasks to interact with a mysql database"
 

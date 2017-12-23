@@ -32,8 +32,10 @@
 
 package com.groupon.artemisia.task.hadoop.hadoop
 
-import com.typesafe.config.ConfigFactory
-import com.groupon.artemisia.task.{Component, TaskLike}
+import java.util
+import com.groupon.artemisia.task.{BaseTaskLike, Component}
+import com.typesafe.config.{Config, ConfigFactory}
+import scala.collection.JavaConverters._
 
 /**
   * Created by chlr on 10/11/16.
@@ -46,9 +48,9 @@ import com.groupon.artemisia.task.{Component, TaskLike}
   */
 class HadoopComponent(name: String) extends Component(name: String) {
 
-  override val tasks: Seq[TaskLike] = Seq(HDFSTask, SqoopExport)
+  override val tasks: util.List[_ <: BaseTaskLike] = Seq(HDFSTask, SqoopExport).asJava
 
-  override val defaultConfig = ConfigFactory.empty()
+  override val defaultConfig: Config = ConfigFactory.empty()
 
   override val info: String = "This component provides support for basic hadoop related tasks"
 

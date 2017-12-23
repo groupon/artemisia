@@ -32,15 +32,17 @@
 
 package com.groupon.artemisia.task.hadoop.hive
 
-import com.typesafe.config.{Config, ConfigFactory}
+import java.util
 import com.groupon.artemisia.task.{Component, TaskLike}
+import com.typesafe.config.{Config, ConfigFactory}
+import scala.collection.JavaConverters._
 
 /**
   * Created by chlr on 8/2/16.
   */
 class HiveComponent(componentName: String) extends Component(componentName) {
 
-  override val tasks: Seq[TaskLike] = HQLExecute :: HQLExport :: HQLRead :: Nil
+  override val tasks: util.List[TaskLike] = Seq(HQLExecute, HQLExport, HQLRead).asJava
 
   override val defaultConfig: Config = ConfigFactory.empty()
 

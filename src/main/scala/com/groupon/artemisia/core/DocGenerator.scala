@@ -34,10 +34,11 @@ package com.groupon.artemisia.core
 
 import java.io.{BufferedWriter, File, FileWriter}
 import java.nio.file.{Path, Paths}
+
 import scala.collection.JavaConverters._
 import org.apache.commons.io.FileUtils
 import org.yaml.snakeyaml.Yaml
-import com.groupon.artemisia.task.Component
+import com.groupon.artemisia.task.{Component, JTaskLike, TaskLike}
 import com.groupon.artemisia.util.FileSystemUtil
 
 import scala.collection.mutable
@@ -52,13 +53,14 @@ object DocGenerator {
   def main(args: Array[String]) = {
     baseDir = Paths.get(args(0))
     FileUtils.deleteDirectory(new File(FileSystemUtil.joinPath(baseDir.toString, "docs", "components")))
-    getComponents foreach { case(a,b) => writeComponentDoc(a,b) }
+    getComponents foreach { case(a,b) => writeComponentDoc(a, b) }
     generateMkDocConfig(getComponents.toList map {_._1})
   }
 
   private def getComponents = {
     val appSetting = AppSetting(cmd = Some("doc"))
-    new AppContext(appSetting).componentMapper
+    val appContext = new AppContext(appSetting)
+    appContext.componentMapper
   }
 
   private def writeComponentDoc(componentName: String, component: Component) = {
@@ -67,15 +69,17 @@ object DocGenerator {
     FileSystemUtil.writeFile(componentDoc(component), new File(filePath))
   }
 
-  private def componentDoc(component: Component) = {
+  private def taskDocGenerator(component: Component) = component.tasks.asScala
+    .map({case x: TaskLike => x; case x: JTaskLike => x.convert})
+    .map({ _.doc(component.name) }).mkString(System.lineSeparator * 4)
 
+  private def componentDoc(component: Component) = {
     s"""
        ! ${component.doc}
        !
-       ! ${component.tasks map { _.doc(component.name) } mkString (System.lineSeparator * 4) }
+       ! ${taskDocGenerator(component)}
        !
      """.stripMargin('!')
-
   }
 
   private def generateMkDocConfig(components: Seq[String]) = {

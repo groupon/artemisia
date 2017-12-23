@@ -32,9 +32,12 @@
 
 package com.groupon.artemisia.task.localhost
 
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 import com.groupon.artemisia.core.Keywords
-import com.groupon.artemisia.task.Component
+import com.groupon.artemisia.task.{BaseTaskLike, Component}
+
+import scala.collection.JavaConverters._
+import java.{util => java_util}
 
 
 /**
@@ -44,8 +47,8 @@ class CoreComponent(componentName: String) extends Component(componentName) {
 
   override val info = s"Component that supports core tasks of ${Keywords.APP}"
 
-  override val defaultConfig = ConfigFactory.empty()
+  override val defaultConfig: Config = ConfigFactory.empty()
 
-  override val tasks = Seq(ScriptTask, EmailTask, SFTPTask, RestAPITask)
+  override val tasks: java_util.List[_ <: BaseTaskLike]  = Seq(ScriptTask, EmailTask, SFTPTask, RestAPITask).asJava
 
 }

@@ -545,7 +545,7 @@ object Dag {
       val componentName = this.payload.as[String](Task.COMPONENT)
       val taskName = this.payload.as[String](Keywords.Task.TASK)
       val defaults = appContext.payload.getAs[Config](s""""${Keywords.Config.DEFAULTS}"."$componentName"."$taskName"""")
-      val component = appContext.componentMapper(componentName)
+      val component = appContext.getComponent(componentName)
       val task = component.dispatchTask(taskName, name, this.payload.as[Config](Keywords.Task.PARAMS) withFallback
         defaults.getOrElse(ConfigFactory.empty()))
       new TaskHandler(TaskConfig(this.payload, appContext), task, referenceConfig)

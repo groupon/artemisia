@@ -32,22 +32,22 @@
 
 package com.groupon.artemisia.task.database.postgres
 
-import com.typesafe.config.ConfigFactory
-import com.groupon.artemisia.task.{Component, TaskLike}
+import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
+import com.groupon.artemisia.task.{BaseTaskLike, Component}
+
+import scala.collection.JavaConverters._
+import java.util
 
 /**
   * Created by chlr on 6/9/16.
   */
 class PostgresComponent(name: String) extends Component(name) {
 
-  override val defaultConfig = ConfigFactory parseString
-    """
-      | {
-      | dsn = { port: 5432 }
-      | }
-    """.stripMargin
+  override val defaultConfig: Config = ConfigFactory.empty.withValue("dsn", ConfigFactory.empty.withValue("port",
+    ConfigValueFactory.fromAnyRef(5432)).root)
 
-  override val tasks: Seq[TaskLike] = Seq(ExportToFile, LoadFromFile, SQLExecute, SQLRead, ExportToHDFS, LoadFromHDFS)
+  override val tasks: util.List[_ <: BaseTaskLike] = Seq(ExportToFile: BaseTaskLike, LoadFromFile, SQLExecute, SQLRead,
+    ExportToHDFS, LoadFromHDFS).asJava
 
   override val info: String = "Component for interacting with postgres database"
 

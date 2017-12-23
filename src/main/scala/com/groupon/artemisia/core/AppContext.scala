@@ -34,13 +34,16 @@ package com.groupon.artemisia.core
 
 import java.io.File
 import java.nio.file.Paths
-import com.typesafe.config.{Config, ConfigFactory, ConfigRenderOptions}
+
 import com.groupon.artemisia.core.AppContext.{DagSetting, Logging}
 import com.groupon.artemisia.core.BasicCheckpointManager.CheckpointData
 import com.groupon.artemisia.dag.Message.TaskStats
-import com.groupon.artemisia.task.{Component, TaskContext}
+import com.groupon.artemisia.inventory.exceptions.UnknownComponentException
+import com.groupon.artemisia.task.{BaseComponent, Component, JavaAPIType, ScalaAPIType, TaskContext, _}
 import com.groupon.artemisia.util.HoconConfigUtil.Handler
 import com.groupon.artemisia.util.{FileSystemUtil, Util}
+import com.typesafe.config.{Config, ConfigFactory, ConfigRenderOptions}
+
 import scala.concurrent.duration.FiniteDuration
 
 
@@ -75,10 +78,29 @@ class AppContext(private val cmdLineParam: AppSetting) {
 
   private val checkpointMgr = if (skipCheckpoints) new BasicCheckpointManager else new FileCheckPointManager(checkpointFile)
   payload = checkpointMgr.checkpoints.adhocPayload withFallback payload
+  val componentMapper: Map[String,Component] = payload.asMap[String](s"${Keywords.Config.SETTINGS_SECTION}.components").map({
+    case (name,component) => (name, Class.forName(component).getConstructor(classOf[String]).newInstance(name).asInstanceOf[Component])
+  })
 
-  val componentMapper: Map[String,Component] = payload.asMap[String](s"${Keywords.Config.SETTINGS_SECTION}.components") map {
-    case (name,component) => { (name, Class.forName(component).getConstructor(classOf[String]).newInstance(name).asInstanceOf[Component] ) }
+
+  /**
+    * get component
+    * @param name
+    * @return
+    */
+  def getComponent(name: String): Component = {
+    val component = payload.asMap[String](s"${Keywords.Config.SETTINGS_SECTION}.components").get(name) match {
+      case Some(x) => Class.forName(x).getConstructor(classOf[String]).newInstance(name).asInstanceOf[BaseComponent]
+      case None => throw new UnknownComponentException(s"component $name not found. make sure the component is " +
+        s"configured in ${Keywords.Config.SETTINGS_SECTION}.${Keywords.Config.COMPONENT} section")
+    }
+    component.componentType match {
+      case ScalaAPIType => component.asInstanceOf[Component]
+      case JavaAPIType => component.asInstanceOf[JComponent].convert
+    }
   }
+
+
 
   TaskContext.setWorkingDir(Paths.get(this.workingDir))
 

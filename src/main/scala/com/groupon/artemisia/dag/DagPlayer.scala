@@ -33,13 +33,11 @@
 package com.groupon.artemisia.dag
 
 import java.util.concurrent.TimeUnit
-
 import akka.actor.{Actor, ActorRef}
 import com.groupon.artemisia.core.{AppContext, AppLogger, Keywords}
 import com.groupon.artemisia.dag.Message.{TaskFailed, TaskStats, TaskSucceeded, Tick, _}
 import com.groupon.artemisia.core.AppLogger._
 import com.groupon.artemisia.task.TaskHandler
-
 import scala.collection.Seq
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}

@@ -31,37 +31,17 @@
  */
 
 package com.groupon.artemisia.task
-
-import com.typesafe.config.{Config, ConfigFactory}
-import com.groupon.artemisia.core.Keywords
+import com.typesafe.config.Config
 import com.groupon.artemisia.util.DocStringProcessor.StringUtil
 import com.groupon.artemisia.util.HoconConfigUtil
 
 /**
   * Created by chlr on 6/7/16.
   */
-trait TaskLike {
+trait TaskLike extends BaseTaskLike {
 
-  /**
-    * name of the task
-    */
-  def taskName: String
 
-  /**
-    *
-    */
-  def defaultConfig: Config
-
-  /**
-    * one line info about the task
-    */
-  val info: String
-
-  /**
-    * task info in brief
-    */
-  val desc: String
-
+  final val taskType: APIType = ScalaAPIType
 
   /**
     * task output config definition
@@ -69,13 +49,7 @@ trait TaskLike {
   val outputConfig: Option[Config]
 
 
-  /**
-    * task output description
-    */
-  val outputConfigDesc: String
-
-
-  final def outputConfigContent = {
+  final def outputConfigContent: String = {
     outputConfig match {
       case Some(x) =>
           s"""
@@ -87,29 +61,6 @@ trait TaskLike {
       case None => s"""${outputConfigDesc.ident(1)}"""
     }
   }
-
-
-  /**
-    * Sequence of config keys and their associated values
-    */
-  def paramConfigDoc: Config
-
-
-  /**
-    *
-    * @param component name of the component
-    * @return config structure of the task
-    */
-  final def configStructure(component: String): String = {
-   val config = ConfigFactory parseString  s"""
-       | {
-       |   ${Keywords.Task.COMPONENT} = $component
-       |   ${Keywords.Task.TASK} = $taskName
-       | }
-     """.stripMargin
-    HoconConfigUtil.render(config.withValue(Keywords.Task.PARAMS, paramConfigDoc.root()).root())
-  }
-
 
   /**
     * definition of the fields in task param config
@@ -123,7 +74,7 @@ trait TaskLike {
     * @param component name of the component
     * @return task documentation
     */
-  def doc(component: String) = {
+  def doc(component: String): String = {
     s"""
        |### $taskName:
        |

@@ -57,7 +57,7 @@ object Command {
           case None => throw new UnknownComponentException(s"component ${cmdLineParam.component.get} doesn't exist")
         }
       }
-      case None => appContext.componentMapper map { case(cName, cObj)  => s"$cName => ${cObj.info}" } mkString "\n"
+      case None => appContext.componentMapper.map({ case(cName, cObj)  => s"$cName => ${cObj.info}" }) mkString "\n"
     }
   }
 
