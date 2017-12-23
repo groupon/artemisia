@@ -151,19 +151,36 @@ object DagEditor {
       * @return
       */
     private def processImportedNode(importedNodePayLoad: Config, parentNode: Node) = {
-      val result = importedNodePayLoad.getAs[List[String]](Keywords.Task.DEPENDENCY) match {
-        case Some(dependency) => importedNodePayLoad.withValue(Keywords.Task.DEPENDENCY
-          ,ConfigValueFactory.fromIterable(dependency.map(x => s"${parentNode.name}$$$x").asJava))
+      var result = importedNodePayLoad.getAs[ConfigValue](Keywords.Task.DEPENDENCY).map(_.valueType()) match {
+        case Some(ConfigValueType.LIST) =>
+          importedNodePayLoad.withValue(Keywords.Task.DEPENDENCY, ConfigValueFactory.fromIterable(
+            importedNodePayLoad.as[List[String]](Keywords.Task.DEPENDENCY).map(x => s"${parentNode.name}$$$x").asJava))
+        case Some(ConfigValueType.OBJECT) =>
+          importedNodePayLoad.withValue(Keywords.Task.DEPENDENCY, Seq(Keywords.Task.COMPLETE_DEPENDENCY,
+            Keywords.Task.FAIL_DEPENDENCY, Keywords.Task.SUCCESS_DEPENDENCY).foldLeft(ConfigFactory.empty)({
+            case (acc, item) => acc.withValue(item, ConfigValueFactory.fromIterable(
+              parentNode.payload.as[List[String]](s"${Keywords.Task.DEPENDENCY}.$item")
+                .map(x => s"${parentNode.name}$$$x").asJava))}).root())
+        case Some(_) => throw new DagException(s"the ${Keywords.Task.DEPENDENCY} must either be a list or object. " +
+          s"any other type is not supported")
         case None => importedNodePayLoad
       }
       // Assertion is not added here because the assertion node must be added only in the last node(s) of the  Worklet
-      val taskSettingNodes = Seq(Keywords.Task.IGNORE_ERROR, Keywords.Task.COOLDOWN, Keywords.Task.ATTEMPT, Keywords.Task.CONDITION
-        ,Keywords.Task.VARIABLES, Keywords.Task.ASSERTION)
-      taskSettingNodes.foldLeft(result) {
+      val taskSettingNodes = Seq(Keywords.Task.IGNORE_ERROR, Keywords.Task.COOLDOWN, Keywords.Task.ATTEMPT,
+        Keywords.Task.CONDITION, Keywords.Task.ASSERTION)
+      result = taskSettingNodes.foldLeft(result) {
         (config: Config, inputNode: String) => parentNode.payload.getAs[ConfigValue](inputNode)
           .map{x => config.withValue(inputNode, x)}
           .getOrElse(config)
       }
+      // merge variables of both nodes.
+      result.withValue(Keywords.Task.VARIABLES, result.getAs[Config](Keywords.Task.VARIABLES) ->
+        parentNode.payload.getAs[Config](Keywords.Task.VARIABLES) match {
+        case (Some(x), Some(y)) => y.withFallback(x).root
+        case (Some(x), None) => x.root
+        case (None, Some(x)) => x.root
+        case (None,None) => ConfigFactory.empty.root
+      })
     }
 
 
@@ -200,7 +217,10 @@ object DagEditor {
           // performing side-effect in map operation.
           module = module
             .withoutPath(name)
-            .withValue(s""""${node.name}$$$name"""", processImportedNode(payload, node).root())
+            .withValue(s""""${node.name}$$$name"""", Try(processImportedNode(payload, node).root()) match {
+              case Success(x) => x
+              case Failure(th) => th.printStackTrace(System.err); throw th
+            })
           Node(s"${node.name}$$$name", module.as[Config](s""""${node.name}$$$name""""))
       }
       val dag = Dag(nodes) // we create a dag object to link nodes and identify cycles.

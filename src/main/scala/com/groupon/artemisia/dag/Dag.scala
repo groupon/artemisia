@@ -61,7 +61,7 @@ private[dag] class Dag(var graph: Seq[Node], checkpointData: CheckpointData) {
     *
     * @param code
     */
-  def updateNodePayloads(code: Config) = {
+  def updateNodePayloads(code: Config): Unit = {
     Dag.extractTaskNodes(code) foreach {
       case (node_name, payload) => this.lookupNodeByName(node_name).payload = payload
     }
@@ -155,7 +155,7 @@ private[dag] class Dag(var graph: Seq[Node], checkpointData: CheckpointData) {
     */
   def getRunnableTasks(appContext: AppContext): Try[Seq[(String, Try[TaskHandler])]] = {
     def getTasks = for (node <- this.getRunnableNodes) yield {
-      node.name -> Try(node.getNodeTask(referenceConfig(appContext.payload), appContext))
+      node.name -> Try(node.getNodeTask(appContext.payload, appContext))
     }
     Try(editDag(appContext.payload)) match {
       case Success(x) => appContext.payload = x; Try(getTasks)
@@ -559,9 +559,8 @@ object Dag {
       * emitted its config out
       *
       * @param contextConfig contextConfig for this node.
-      * @return resolved payload of the node.
       */
-    private[dag] def resolve(contextConfig: Config) = {
+    private[dag] def resolve(contextConfig: Config): Unit = {
       // we do this so that assertions are not resolved now and only after task execution completes
       val assertions = payload.getAs[ConfigValue](Keywords.Task.ASSERTION)
       val variables = payload.getAs[Config](Keywords.Task.VARIABLES)
