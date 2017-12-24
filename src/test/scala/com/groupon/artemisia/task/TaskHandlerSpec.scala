@@ -43,9 +43,9 @@ class TaskHandlerSpec extends TestSpec {
 
   "TaskHandler" must "handle assertions failure appropriately" in {
       val task = new Task("dummy_task") {
-        override protected[task] def setup(): Unit = ()
-        override protected[task] def work(): Config = ConfigFactory parseString "foo = 100"
-        override protected[task] def teardown(): Unit = ()
+        override def setup(): Unit = ()
+        override def work(): Config = ConfigFactory parseString "foo = 100"
+        override def teardown(): Unit = ()
       }
       val taskConfig = TaskConfig(assertion = Some((ConfigValueFactory.fromAnyRef("${foo} == 0"),"test")))
       val handler = new TaskHandler(taskConfig, task, ConfigFactory.empty())
@@ -59,9 +59,9 @@ class TaskHandlerSpec extends TestSpec {
   it must "task output must correctly appear in assertions" in {
 
     val task = new Task("dummy_task") {
-      override protected[task] def setup(): Unit = ()
-      override protected[task] def work(): Config = ConfigFactory parseString "foo = 100"
-      override protected[task] def teardown(): Unit = ()
+      override def setup(): Unit = ()
+      override def work(): Config = ConfigFactory parseString "foo = 100"
+      override def teardown(): Unit = ()
     }
     val taskConfig = TaskConfig(assertion = Some((ConfigValueFactory.fromAnyRef("${foo} == 100"),"test")))
     val handler = new TaskHandler(taskConfig, task, ConfigFactory.empty())

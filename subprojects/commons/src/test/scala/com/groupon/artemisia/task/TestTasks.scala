@@ -43,7 +43,7 @@ class TestAdderTask(name: String ,val num1: Int, val num2: Int, val result: Stri
   override def setup(): Unit = {}
   override def work(): Config = {
     val config = ConfigFactory.empty.withValue(result, ConfigValueFactory.fromAnyRef(num1+num2))
-    wrapAsStats(config) withFallback config
+    wrapAsStats(config.root()) withFallback config
   }
   override def teardown(): Unit = {}
 

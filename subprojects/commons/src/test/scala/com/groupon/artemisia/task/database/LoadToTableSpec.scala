@@ -77,8 +77,8 @@ object LoadToTableSpec {
     override val supportedModes = "default" :: "bulk" :: Nil
     override val dbInterface: DBInterface = TestDBInterFactory.withDefaultDataLoader(tableName)
     override val source = Left(new FileInputStream(new File(location)))
-    override protected[task] def setup(): Unit = {}
-    override protected[task] def teardown(): Unit = {}
+    override def setup(): Unit = {}
+    override def teardown(): Unit = {}
   }
 
 }
