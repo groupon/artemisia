@@ -33,10 +33,12 @@
 package com.groupon.artemisia.task
 
 import java.io.{File, PrintWriter}
+
 import com.google.common.io.Files
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.{Config, ConfigFactory, ConfigValue}
 import com.groupon.artemisia.core.Keywords
 import com.groupon.artemisia.util.FileSystemUtil
+
 import scala.io.Source
 
 
@@ -64,7 +66,7 @@ abstract class Task(val taskName: String) {
    * @param fileName the name of the file to write the content
    * @return the java.io.File handle
    */
-  protected def writeToFile(content: String, fileName: String) = {
+  protected def writeToFile(content: String, fileName: String): File = {
     val file = this.getFileHandle(fileName)
     Files.createParentDirs(file)
     val writer = new PrintWriter(file)
@@ -81,7 +83,7 @@ abstract class Task(val taskName: String) {
    * @param fileName name of the file to accessed
    * @return an instance of java.io.File representing the requested file.
    */
-  protected def getFileHandle(fileName: String) = {
+  protected def getFileHandle(fileName: String): File = {
     val file = new File(FileSystemUtil.joinPath(TaskContext.workingDir.toString,taskName),fileName)
     Files.createParentDirs(file)
     Files.touch(file)
@@ -93,7 +95,7 @@ abstract class Task(val taskName: String) {
    * @param fileName name of the file to be read
    * @return String content of the file.
    */
-  protected def readFile(fileName: String) = {
+  protected def readFile(fileName: String): String = {
     Source.fromFile(getFileHandle(fileName)).getLines().mkString
   }
 
@@ -104,7 +106,7 @@ abstract class Task(val taskName: String) {
    *  - creating database connections
    *  - generating relevant files
    */
-  protected[task] def setup(): Unit
+  def setup(): Unit
 
   /**
    * override this to implement the work phase
@@ -115,7 +117,7 @@ abstract class Task(val taskName: String) {
    *
    * @return any output of the work phase be encoded as a HOCON Config object.
    */
-  protected[task] def work(): Config
+  def work(): Config
 
 
   /**
@@ -123,8 +125,13 @@ abstract class Task(val taskName: String) {
    *
    * this is where you deallocate any resource you have acquired in setup phase.
    */
-  protected[task] def teardown(): Unit
+  def teardown(): Unit
 
+
+  /**
+    *
+    * @return
+    */
   def execute(): Config = {
     this.setup()
     val result = this.work()
@@ -147,9 +154,9 @@ abstract class Task(val taskName: String) {
    * @param config
    * @return
    */
-  def wrapAsStats(config: Config) = {
+  def wrapAsStats(config: ConfigValue): Config = {
     ConfigFactory.empty.withValue(s""""$taskName"""",
-      ConfigFactory.empty.withValue(Keywords.TaskStats.STATS, config.root).root)
+      ConfigFactory.empty.withValue(Keywords.TaskStats.STATS, config).root)
   }
 
 }

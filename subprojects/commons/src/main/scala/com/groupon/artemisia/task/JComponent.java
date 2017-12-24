@@ -12,13 +12,14 @@ abstract public class JComponent extends BaseComponent {
           super(name);
      }
 
-     final public APIType componentType = JavaAPIType$.MODULE$;
+     @Override
+     final public APIType componentType() {
+          return JavaAPIType$.MODULE$;
+     }
 
      /**
       * component Name
       */
      public String name;
-
-
 
 }

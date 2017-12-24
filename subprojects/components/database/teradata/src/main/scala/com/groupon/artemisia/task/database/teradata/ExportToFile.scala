@@ -54,11 +54,12 @@ class ExportToFile(override val name: String, override val sql: String, location
 
   override val target: Either[OutputStream, URI] = Left(new FileOutputStream(new File(location)))
 
-  override protected[task] def setup(): Unit = {
+  override def setup(): Unit = {
     assert(location.getScheme == "file", "LocalFileSystem is the only supported destination")
   }
 
   override val supportedModes: Seq[String] = ExportToFile.supportedModes
+
 }
 
 

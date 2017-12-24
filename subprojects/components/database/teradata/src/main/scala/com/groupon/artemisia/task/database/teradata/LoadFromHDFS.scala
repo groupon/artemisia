@@ -65,7 +65,7 @@ abstract class  LoadFromHDFS(override val taskName: String, override val tableNa
   /**
     * No operations are done in this phase
     */
-  override protected[task] def setup(): Unit = {
+  override def setup(): Unit = {
     if (loadSetting.truncate) {
       TeraUtils.truncateElseDrop(tableName)
     }

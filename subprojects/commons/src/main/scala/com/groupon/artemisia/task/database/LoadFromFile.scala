@@ -34,7 +34,8 @@ package com.groupon.artemisia.task.database
 
 import java.io.InputStream
 import java.net.URI
-import com.typesafe.config.{Config, ConfigFactory}
+
+import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
 import com.groupon.artemisia.core.AppLogger
 import com.groupon.artemisia.task.Task
 import com.groupon.artemisia.task.settings.{DBConnection, LoadSetting}
@@ -66,7 +67,7 @@ abstract class LoadFromFile(val name: String, val tableName: String, val locatio
     */
   protected val supportedModes: Seq[String]
 
-  override protected[task] def setup() = {
+  override def setup() = {
     require(supportedModes contains loadSetting.mode, s"unsupported mode ${loadSetting.mode}")
     if (loadSetting.truncate) {
       AppLogger info s"truncating table $tableName"
@@ -85,15 +86,13 @@ abstract class LoadFromFile(val name: String, val tableName: String, val locatio
     AppLogger info s"${totalRows - rejectedCnt} rows loaded into table $tableName"
     AppLogger info s"$rejectedCnt row were rejected"
     wrapAsStats {
-      ConfigFactory parseString
-        s"""
-           |loaded = ${totalRows-rejectedCnt}
-           |rejected = $rejectedCnt
-         """.stripMargin
+      ConfigFactory.empty
+        .withValue("loaded", ConfigValueFactory.fromAnyRef(totalRows-rejectedCnt))
+        .withValue("rejected", ConfigValueFactory.fromAnyRef(rejectedCnt)).root()
     }
   }
 
-   override protected[task] def teardown() = {
+   override def teardown(): Unit = {
     AppLogger debug s"closing database connection"
     dbInterface.terminate()
      source match {

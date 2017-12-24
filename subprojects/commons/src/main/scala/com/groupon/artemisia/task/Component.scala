@@ -53,7 +53,7 @@ abstract class Component(override val name: String) extends BaseComponent(name) 
   /**
     * type of API
     */
-  final val componentType: APIType = ScalaAPIType
+  override final val componentType: APIType = ScalaAPIType
 
 
   /**

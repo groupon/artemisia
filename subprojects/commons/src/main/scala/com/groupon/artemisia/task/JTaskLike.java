@@ -9,7 +9,8 @@ import java.util.Optional;
  */
 abstract public class JTaskLike extends BaseTaskLike {
 
-    final public APIType taskType = JavaAPIType$.MODULE$;
+    @Override
+    final public APIType taskType() { return JavaAPIType$.MODULE$; }
 
     public String taskName;
 

@@ -118,7 +118,7 @@ abstract class TPTLoad(override val taskName: String
     }
   }
 
-  override protected[task] def setup(): Unit = {
+  override def setup(): Unit = {
     if (loadDataSize > 0) {
       assert(detectTPTRun(tableName) == Nil, s"detected TPT job(s) already running for the table " +
         s"${detectTPTRun(tableName).mkString(",")}. try again after sometime")
@@ -130,22 +130,22 @@ abstract class TPTLoad(override val taskName: String
     }
   }
 
-  override protected[task] def work(): Config = {
+  override def work(): Config = {
     if (loadDataSize > 0) {
       val combinedFuture = TPTLoad.monitor(readerFuture, writerFuture)
       Await.result(combinedFuture, Duration.Inf)
     }
       wrapAsStats {
         logParser match {
-          case x: TPTLoadLogParser => x.toConfig
+          case x: TPTLoadLogParser => x.toConfig.root()
           case x: TPTStreamLogParser =>
             x.updateErrorTableCount(tableName)
-            x.toConfig
+            x.toConfig.root()
         }
       }
   }
 
-  override protected[task] def teardown(): Unit = {
+  override def teardown(): Unit = {
     if (loadDataSize > 0) {
       errorLogger.log()
       if (logParser.jobId != null) {

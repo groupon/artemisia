@@ -70,7 +70,7 @@ class SqoopExport(override val taskName: String,
     * - creating database connections
     * - generating relevant files
     */
-  override protected[task] def setup(): Unit = {}
+  override def setup(): Unit = {}
 
 
   protected val logParser = new SqoopExportLogParser(System.out)
@@ -96,7 +96,7 @@ class SqoopExport(override val taskName: String,
     *
     * @return any output of the work phase be encoded as a HOCON Config object.
     */
-  override protected[task] def work(): Config = {
+  override def work(): Config = {
     if (sqoopOption.truncate && sqoopOption.targetType == "hdfs") {
      executeCmd(hdfsTruncateCmd)
     }
@@ -107,13 +107,10 @@ class SqoopExport(override val taskName: String,
     executeCmd(sqoopCommand(executable), stderr = logParser)
     logParser.close()
     wrapAsStats {
-      ConfigFactory parseString
-        s"""
-           |{
-           | input-rows = ${logParser.inputRecords}
-           | output-rows = ${logParser.outputRecords}
-           |}
-         """.stripMargin
+      ConfigFactory.empty
+        .withValue("input-rows", ConfigValueFactory.fromAnyRef(logParser.inputRecords))
+        .withValue("output-rows", ConfigValueFactory.fromAnyRef(logParser.outputRecords))
+        .root()
     }
   }
 
@@ -156,7 +153,7 @@ class SqoopExport(override val taskName: String,
     *
     * this is where you deallocate any resource you have acquired in setup phase.
     */
-  override protected[task] def teardown(): Unit = {}
+  override def teardown(): Unit = {}
 
 }
 

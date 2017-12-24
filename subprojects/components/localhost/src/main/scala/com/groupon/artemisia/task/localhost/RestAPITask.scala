@@ -55,7 +55,7 @@ class RestAPITask(override val taskName: String
 
   val client = new OkHttpClient()
 
-  override protected[task] def setup(): Unit = {
+  override def setup(): Unit = {
       require(RestEndPoint.allowedHttpMethods contains  restEndPoint.method,
       s"${restEndPoint.method} is not one of the allowed http methods. allowed http methods are ${RestEndPoint.allowedHttpMethods}")
 
@@ -63,7 +63,7 @@ class RestAPITask(override val taskName: String
       s"${restEndPoint.payloadType} is not one of the allowed http methods. allowed payload types are ${RestEndPoint.allowedPayloadTypes}")
   }
 
-  override protected[task] def work(): Config = {
+  override def work(): Config = {
     val response = client.newCall(request.build()).execute()
     assert(allowedStatusCodes contains response.code(), s"unexpected http status code. ${response.code()}. " +
       s"allowed status codes are ${allowedStatusCodes.mkString(",")}")
@@ -141,7 +141,7 @@ class RestAPITask(override val taskName: String
       .withValue("status", ConfigValueFactory.fromAnyRef(response.code()))
   }
 
-  override protected[task] def teardown(): Unit = {}
+  override def teardown(): Unit = {}
 
 }
 

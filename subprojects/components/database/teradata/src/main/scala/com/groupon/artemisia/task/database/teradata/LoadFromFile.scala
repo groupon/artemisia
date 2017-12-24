@@ -66,7 +66,7 @@ abstract class LoadFromFile(override val taskName: String, override val tableNam
   /**
     * No operations are done in this phase
     */
-  override protected[task] def setup(): Unit = {
+  override def setup(): Unit = {
     if (loadSetting.truncate) {
       TeraUtils.truncateElseDrop(tableName)
     }
@@ -75,7 +75,7 @@ abstract class LoadFromFile(override val taskName: String, override val tableNam
   /**
     * No operations are done in this phase
     */
-  override protected[task] def teardown(): Unit = {}
+  override def teardown(): Unit = {}
 
 }
 

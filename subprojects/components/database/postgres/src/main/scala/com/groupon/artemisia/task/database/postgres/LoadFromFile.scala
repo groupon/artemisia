@@ -59,9 +59,9 @@ class LoadFromFile(name: String = Util.getUUID, tableName: String, location: URI
     case "bulk" => Right(location)
   }
 
-  override protected[task] def setup(): Unit = {}
+  override def setup(): Unit = {}
 
-  override protected[task] def teardown(): Unit = {}
+  override def teardown(): Unit = {}
 
 }
 

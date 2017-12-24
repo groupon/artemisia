@@ -34,7 +34,8 @@ package com.groupon.artemisia.task.database
 
 import java.io.OutputStream
 import java.net.URI
-import com.typesafe.config.{Config, ConfigFactory}
+
+import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
 import com.groupon.artemisia.core.AppLogger
 import com.groupon.artemisia.task.Task
 import com.groupon.artemisia.task.settings.{DBConnection, ExportSetting}
@@ -59,7 +60,7 @@ abstract class ExportToFile(val name: String, val sql: String, val location: URI
 
   val supportedModes: Seq[String]
 
-  override protected[task] def setup(): Unit = {}
+  override def setup(): Unit = {}
 
   /**
     *
@@ -67,19 +68,16 @@ abstract class ExportToFile(val name: String, val sql: String, val location: URI
     *
     * @return Config object with key rows and values as total number of rows exports
     */
-  override protected[task] def work(): Config = {
+  override def work(): Config = {
     AppLogger info s"exporting data to ${location.toString}"
     val records = dbInterface.exportSQL(sql, target, exportSetting)
     AppLogger info s"exported $records rows to ${location.toString}"
     wrapAsStats {
-      ConfigFactory parseString
-        s"""
-           | rows = $records
-           """.stripMargin
+      ConfigFactory.empty.withValue("rows", ConfigValueFactory.fromAnyRef(records)).root
     }
   }
 
-  override protected[task] def teardown() = {
+  override def teardown() = {
     AppLogger debug s"closing database connection"
     dbInterface.terminate()
     target match {

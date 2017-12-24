@@ -63,7 +63,7 @@ class HQLExecute(override val taskName: String,
       case (None, _) => throw new RuntimeException("beeline tool is not found in the PATH env variable")
   }
 
-  override protected[task] def setup(): Unit = {}
+  override def setup(): Unit = {}
 
   lazy val dbInterface: DBInterface = connectionProfile match {
     case Some(profile) => new HiveServerDBInterface(profile)
@@ -75,17 +75,17 @@ class HQLExecute(override val taskName: String,
       case (HiveServer2, Some(_)) => executeQuery
       case (HiveServer2, None) => throw new InvalidSettingException("HiveServer2 mode requires dsn setting defined")
       case (Beeline, Some(_)) => wrapAsStats(ConfigFactory.empty.withValue("rows-effected",
-        beeLineCli.execute(sql.mkString(";\n"), taskName).root))
+        beeLineCli.execute(sql.mkString(";\n"), taskName).root).root())
       case (Beeline, None) => throw new InvalidSettingException("Beeline mode requires dsn setting defined")
       case (HiveCLI, _) => wrapAsStats(ConfigFactory.empty().withValue("rows-effected",
-        hiveCli.execute(sql.mkString(";\n"), taskName).root))
+        hiveCli.execute(sql.mkString(";\n"), taskName).root).root())
     }
   }
 
   protected def executeQuery: Config = {
     wrapAsStats {
       ConfigFactory.empty.withValue("rows-effected",
-        ConfigValueFactory.fromAnyRef(sql.map(x => dbInterface.execute(x)).sum))
+        ConfigValueFactory.fromAnyRef(sql.map(x => dbInterface.execute(x)).sum)).root()
     }
   }
 

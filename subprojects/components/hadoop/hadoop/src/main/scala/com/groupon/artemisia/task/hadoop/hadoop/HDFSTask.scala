@@ -69,7 +69,7 @@ class HDFSTask(override val taskName: String,
     * - creating database connections
     * - generating relevant files
     */
-  override protected[task] def setup(): Unit = {}
+  override def setup(): Unit = {}
 
   /**
     * override this to implement the work phase
@@ -80,13 +80,14 @@ class HDFSTask(override val taskName: String,
     *
     * @return any output of the work phase be encoded as a HOCON Config object.
     */
-  override protected[task] def work(): Config = {
+  override def work(): Config = {
     val (stdout, stderr) = new ByteArrayOutputStream() -> new ByteArrayOutputStream()
     executeCmd(command, stdout = stdout, stderr = stderr)
     wrapAsStats {
       ConfigFactory.empty()
         .withValue("stdout", ConfigValueFactory.fromAnyRef(stdout.toString))
         .withValue("stderr", ConfigValueFactory.fromAnyRef(stderr.toString))
+        .root()
     }
   }
 
@@ -96,7 +97,7 @@ class HDFSTask(override val taskName: String,
     *
     * this is where you deallocate any resource you have acquired in setup phase.
     */
-  override protected[task] def teardown(): Unit = {}
+  override def teardown(): Unit = {}
 
 }
 

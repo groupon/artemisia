@@ -49,12 +49,12 @@ class SQLExecute(name: String, sql: String, connectionProfile: DBConnection) ext
   /**
    * No work is done in this phase
    */
-  override protected[task] def setup(): Unit = {}
+  override def setup(): Unit = {}
 
   /**
    * No work is done in this phase
    */
-  override protected[task] def teardown(): Unit = {
+  override def teardown(): Unit = {
     dbInterface.terminate()
   }
 

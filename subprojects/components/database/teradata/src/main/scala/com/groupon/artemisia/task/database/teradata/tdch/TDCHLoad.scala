@@ -68,7 +68,7 @@ class TDCHLoad(override val taskName: String, val dBConnection: DBConnection, va
   /**
     * @todo detect error table overrides with errortablename argument
     */
-  override protected[task] def setup(): Unit = {
+  override def setup(): Unit = {
     if (method == "batch.insert" && truncate) {
       dbInterface.execute(s"DELETE FROM $targetTable", printSQL = false)
     }
@@ -80,7 +80,7 @@ class TDCHLoad(override val taskName: String, val dBConnection: DBConnection, va
     }
   }
 
-  override protected[task] def work(): Config = {
+  override def work(): Config = {
     val sourceTypeConfigMap = Map (
       "hive" -> "sourcetable",
       "hdfs" -> "sourcepaths"
@@ -89,11 +89,11 @@ class TDCHLoad(override val taskName: String, val dBConnection: DBConnection, va
     val (command, env) = tdchHadoopSetting.commandArgs(export = false, connection = dBConnection, settings)
     CommandUtil.executeCmd(command = command, env = env, stderr = logStream, obfuscate = Seq(command.indexOf("-password")+2))
     wrapAsStats {
-      ConfigFactory.empty().withValue("rows", ConfigValueFactory.fromAnyRef(logStream.rowsLoaded.toString))
+      ConfigFactory.empty().withValue("rows", ConfigValueFactory.fromAnyRef(logStream.rowsLoaded.toString)).root()
     }
   }
 
-  override protected[task] def teardown(): Unit = {}
+  override def teardown(): Unit = {}
 
 }
 

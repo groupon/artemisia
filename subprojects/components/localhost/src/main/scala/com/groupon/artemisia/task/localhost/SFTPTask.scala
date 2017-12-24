@@ -49,9 +49,9 @@ class SFTPTask(name: String, val connection: SFTPConnection, val remoteToLocal: 
 
   val manager = new SFTPManager(connection)
 
-  override protected[task] def setup(): Unit = {}
+  override def setup(): Unit = {}
 
-  override protected[task] def work(): Config = {
+  override def work(): Config = {
 
     localWorkingDir foreach { manager.setLCD }
     remoteWorkingDir foreach { manager.setRCD }
@@ -62,7 +62,7 @@ class SFTPTask(name: String, val connection: SFTPConnection, val remoteToLocal: 
     ConfigFactory.empty()
   }
 
-  override protected[task] def teardown(): Unit = {
+  override def teardown(): Unit = {
     manager.terminate()
   }
 

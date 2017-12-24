@@ -55,7 +55,7 @@ abstract class SQLRead(name: String = Util.getUUID, val sql: String, val connect
 
   val dbInterface: DBInterface
 
-  override protected[task] def setup(): Unit = {}
+  override def setup(): Unit = {}
 
   /**
    * execute query and parse as config file.
@@ -63,13 +63,13 @@ abstract class SQLRead(name: String = Util.getUUID, val sql: String, val connect
     *
     * @return config file object
    */
-  override protected[task] def work(): Config = {
+  override def work(): Config = {
     val result = dbInterface.queryOne(sql)
     AppLogger debug s"query result ${result.root().render(ConfigRenderOptions.concise())}"
     result
   }
 
-  override protected[task] def teardown() = {
+  override def teardown(): Unit = {
     AppLogger debug s"closing database connection"
     dbInterface.terminate()
   }

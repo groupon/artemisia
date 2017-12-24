@@ -51,7 +51,7 @@ class ExportToFile(name: String, sql: String, location: URI ,connectionProfile: 
 
   override val supportedModes: Seq[String] = ExportToFile.supportedModes
 
-  override protected[task] def setup(): Unit = {
+  override def setup(): Unit = {
     require(location.getScheme == "file", "LocalFileSystem is the only supported destination")
   }
 

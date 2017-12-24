@@ -47,9 +47,9 @@ class EmailTask(name: String, val emailRequest: EmailRequest, val emailConnectio
 
   val email = new MultiPartEmail()
 
-  override protected[task] def setup(): Unit = {}
+  override def setup(): Unit = {}
 
-  override protected[task] def work(): Config = {
+  override def work(): Config = {
     val builder = new EmailBuilder(emailConnection)
     val email = builder.build(emailRequest)
     AppLogger info s"""sending email to ${emailRequest.to mkString ","}"""
@@ -57,7 +57,7 @@ class EmailTask(name: String, val emailRequest: EmailRequest, val emailConnectio
     ConfigFactory.empty()
   }
 
-  override protected[task] def teardown(): Unit = {}
+  override def teardown(): Unit = {}
 
 }
 

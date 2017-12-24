@@ -94,7 +94,7 @@ class TDCHExtract(override val taskName: String, val dBConnection: DBConnection,
   }
 
 
-  override protected[task] def setup(): Unit = {
+  override def setup(): Unit = {
     if (truncate) {
       targetType match {
         case "hdfs" =>
@@ -108,7 +108,7 @@ class TDCHExtract(override val taskName: String, val dBConnection: DBConnection,
     }
   }
 
-  override protected[task] def work(): Config = {
+  override def work(): Config = {
     val methodMap = Map (
       "hash" -> "split.by.hash",
       "partition" -> "split.by.partition",
@@ -118,11 +118,11 @@ class TDCHExtract(override val taskName: String, val dBConnection: DBConnection,
     val (command, env) = tdchHadoopSetting.commandArgs(export = true, connection = dBConnection, settings)
     CommandUtil.executeCmd(command = command, env = env, stderr = logStream, obfuscate = Seq(command.indexOf("-password")+2))
     wrapAsStats {
-      ConfigFactory.empty().withValue("rows", ConfigValueFactory.fromAnyRef(logStream.rowsLoaded.toString))
+      ConfigFactory.empty().withValue("rows", ConfigValueFactory.fromAnyRef(logStream.rowsLoaded.toString)).root()
     }
   }
 
-  override protected[task] def teardown(): Unit = {}
+  override def teardown(): Unit = {}
 
 }
 

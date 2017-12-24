@@ -32,11 +32,12 @@
 
 package com.groupon.artemisia.task.database
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
 import com.groupon.artemisia.core.AppLogger
 import com.groupon.artemisia.task.Task
 import com.groupon.artemisia.task.settings.DBConnection
 import com.groupon.artemisia.util.HoconConfigUtil.Handler
+
 import scala.reflect.ClassTag
 
 /**
@@ -54,7 +55,7 @@ abstract class SQLExecute(name: String, val sql: String, val connectionProfile: 
 
   val dbInterface: DBInterface
 
-  override protected[task] def setup(): Unit
+  override def setup(): Unit
 
   /**
    * The query is executed in this phase.
@@ -62,18 +63,15 @@ abstract class SQLExecute(name: String, val sql: String, val connectionProfile: 
     *
     * @return any output of the work phase be encoded as a HOCON Config object.
    */
-  override protected[task] def work(): Config = {
+  override def work(): Config = {
     val updatedRows = dbInterface.execute(sql)
     AppLogger debug s"$updatedRows rows updated"
     wrapAsStats {
-      ConfigFactory parseString
-        s"""
-          | rows-effected = $updatedRows
-        """.stripMargin
+      ConfigFactory.empty.withValue("rows-effected", ConfigValueFactory.fromAnyRef(updatedRows)).root
     }
   }
 
-  override protected[task] def teardown() = {
+  override def teardown(): Unit = {
     AppLogger debug s"closing database connection"
     dbInterface.terminate()
   }
