@@ -78,8 +78,11 @@ class AppContext(private val cmdLineParam: AppSetting) {
 
   private val checkpointMgr = if (skipCheckpoints) new BasicCheckpointManager else new FileCheckPointManager(checkpointFile)
   payload = checkpointMgr.checkpoints.adhocPayload withFallback payload
-  val componentMapper: Map[String,Component] = payload.asMap[String](s"${Keywords.Config.SETTINGS_SECTION}.components").map({
-    case (name,component) => (name, Class.forName(component).getConstructor(classOf[String]).newInstance(name).asInstanceOf[Component])
+  val componentMapper: Map[String, Component] = payload.asMap[String](s"${Keywords.Config.SETTINGS_SECTION}.components").map({
+    case (name,component) => (name, Class.forName(component).getConstructor(classOf[String]).newInstance(name))
+  }).map({
+    case (name, component: Component) => name -> component
+    case (name, component: JComponent) => name -> component.convert
   })
 
 

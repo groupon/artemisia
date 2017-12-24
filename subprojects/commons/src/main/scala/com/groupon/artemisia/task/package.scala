@@ -23,7 +23,7 @@ package object task {
         override def apply(name: String, config: Config): Task = jTaskLike.create(name, config)
         override def fieldDefinition: Map[String, AnyRef] = Map() // TODO implemetation
         override def defaultConfig: Config = jTaskLike.defaultConfig
-        override def taskName: String = jTaskLike.taskName
+        override val taskName: String = jTaskLike.taskName
         override def paramConfigDoc: Config = jTaskLike.paramConfigDoc
         override val outputConfig: Option[Config] = if (jTaskLike.outputConfig.isPresent)
           Some(jTaskLike.outputConfig().get()) else None

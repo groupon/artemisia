@@ -12,19 +12,7 @@ abstract public class JTaskLike extends BaseTaskLike {
     @Override
     final public APIType taskType() { return JavaAPIType$.MODULE$; }
 
-    public String taskName;
-
-    public Config defaultConfig;
-
-    public String info;
-
-    public String desc;
-
     abstract public Optional<Config> outputConfig();
-
-    public String outputConfigDesc;
-
-    public Config paramConfigDoc;
 
     public Map<String, Object> fieldDefinition;
 

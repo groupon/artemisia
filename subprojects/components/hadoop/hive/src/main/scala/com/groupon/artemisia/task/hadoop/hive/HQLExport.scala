@@ -55,7 +55,7 @@ class HQLExport(taskName: String, sql: String, location: URI, connectionProfile:
 
 object HQLExport extends ExportTaskHelper {
 
-  override def taskName = "HQLExport"
+  override val taskName = "HQLExport"
 
   override val desc =
     s"""

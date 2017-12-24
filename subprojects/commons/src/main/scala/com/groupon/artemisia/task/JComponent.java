@@ -17,9 +17,4 @@ abstract public class JComponent extends BaseComponent {
           return JavaAPIType$.MODULE$;
      }
 
-     /**
-      * component Name
-      */
-     public String name;
-
 }

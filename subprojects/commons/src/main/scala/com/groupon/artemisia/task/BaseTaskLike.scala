@@ -17,7 +17,7 @@ abstract class BaseTaskLike {
   /**
     * name of the task
     */
-  def taskName: String
+  val taskName: String
 
   /**
     *

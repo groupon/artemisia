@@ -47,7 +47,7 @@ import scala.reflect.ClassTag
 
 trait ExportTaskHelper extends TaskLike {
 
-  def taskName = "SQLExport"
+  val taskName = "SQLExport"
 
   val info = "export query results to a file"
 

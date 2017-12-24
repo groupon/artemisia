@@ -90,7 +90,7 @@ class HQLRead(taskName: String,
 
 object HQLRead extends TaskLike {
 
-  override def taskName: String = "HQLRead"
+  override val taskName: String = "HQLRead"
 
   override val defaultConfig: Config = ConfigFactory.empty.withValue("mode", ConfigValueFactory.fromAnyRef("cli"))
 

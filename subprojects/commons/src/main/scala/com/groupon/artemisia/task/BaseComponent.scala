@@ -93,6 +93,7 @@ abstract class BaseComponent(val name: String) {
     tasks.asScala.find(_.taskName == task) match {
       case Some(x: TaskLike) => x.doc(name)
       case Some(x: JTaskLike) => x.convert.doc(name)
+      case Some(_) => throw new UnKnownTaskException(s"The Task is neither a scala task nor a java task")
       case None => throw new UnKnownTaskException(s"unknown task $task in component $name")
     }
   }
