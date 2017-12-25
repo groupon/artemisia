@@ -80,8 +80,8 @@ class HQLRead(taskName: String,
 
 
   override def teardown(): Unit = {
-    connectionProfile match {
-      case Some(_) => super.teardown()
+    (mode, connectionProfile) match {
+      case (HiveServer2, Some(_)) => super.teardown()
       case _ => ()
     }
   }
@@ -96,7 +96,7 @@ object HQLRead extends TaskLike {
 
   override def apply(name: String, config: Config, reference: Config): HQLRead = {
     val sql = config.asInlineOrFile("sql", reference)
-    val connection = config.getAs[ConfigValue]("dsn") map DBConnection.parseConnectionProfile
+    val connection = config.getAs[ConfigValue]("dsn").map(DBConnection.parseConnectionProfile)
     new HQLRead(name, sql, Mode(config.as[String]("mode")), connection)
   }
 

@@ -33,12 +33,13 @@
 package com.groupon.artemisia.task.hadoop.hive
 
 import com.groupon.artemisia.inventory.exceptions.InvalidSettingException
-import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
+import com.typesafe.config.{Config, ConfigFactory, ConfigValue, ConfigValueFactory}
 import com.groupon.artemisia.task.database.DBInterface
 import com.groupon.artemisia.task.settings.DBConnection
 import com.groupon.artemisia.task.{Task, TaskLike, database}
 import com.groupon.artemisia.util.CommandUtil._
 import com.groupon.artemisia.util.HoconConfigUtil.Handler
+
 import scala.collection.JavaConverters._
 
 /**
@@ -121,9 +122,9 @@ object HQLExecute extends TaskLike {
 
   override def apply(name: String, config:  Config, reference: Config) = {
     val sql = config.asInlineArrayOrFile("sql", s";${System.lineSeparator}", reference)
-    val connection = config.hasPath("dsn") match {
-      case true => Some(DBConnection.parseConnectionProfile(config.getValue("dsn")))
-      case false => None
+    val connection = config.getAs[ConfigValue]("dsn") match {
+      case Some(x) => Some(DBConnection.parseConnectionProfile(x))
+      case None => None
     }
     new HQLExecute(name, sql, Mode(config.as[String]("mode")) , connection)
   }

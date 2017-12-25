@@ -159,6 +159,19 @@ class HoconConfigSpec extends TestSpec {
   }
 
 
+//  it must "resolve nested variables" in {
+//    val config = ConfigFactory parseString
+//       """
+//        | {
+//        |   foo_baz = bar
+//        |   bar = baz
+//        |   tango = "${foo_${bar}}"
+//        | }
+//      """.stripMargin
+//    import HoconConfigUtil._
+//    config.hardResolve().as[String]("tango") must be ("bar")
+//  }
+
   it must "handle key or key-file fetch" in {
     val config = ConfigFactory parseString
       s"""

@@ -264,7 +264,8 @@ object HoconConfigUtil {
         }
       }
       else if (config.hasPath(s"$key-file")) {
-        HoconConfigEnhancer.readFileContent(new File(config.getString(s"$key-file")), reference).split(separator).toSeq
+        HoconConfigEnhancer.readFileContent(new File(config.getString(s"$key-file")), reference)
+          .split(separator).filter(_.trim.length > 0).toSeq
       }
        else throw new SettingNotFoundException(s"key $key/$key-file was not found")
     }

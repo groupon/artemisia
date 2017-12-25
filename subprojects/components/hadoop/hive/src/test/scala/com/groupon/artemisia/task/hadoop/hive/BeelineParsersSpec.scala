@@ -6,7 +6,7 @@ import org.apache.hadoop.io.IOUtils.NullOutputStream
 /**
   * Created by chlr on 12/14/17.
   */
-class BeelineParsersSpec extends TestSpec {
+class   BeelineParsersSpec extends TestSpec {
 
   "BeelineExecuteParser" must "parse the log file for HQLExecute" in {
     val data =

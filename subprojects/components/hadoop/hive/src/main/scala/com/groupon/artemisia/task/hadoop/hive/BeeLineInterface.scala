@@ -1,6 +1,7 @@
 package com.groupon.artemisia.task.hadoop.hive
 
-import java.io.OutputStream
+import java.io.{File, OutputStream}
+
 import com.groupon.artemisia.util.FileSystemUtil._
 import com.groupon.artemisia.core.AppLogger.info
 import com.groupon.artemisia.task.TaskContext
@@ -24,7 +25,7 @@ class BeeLineInterface(beeline: String,
       s"""set mapred.job.name = $taskName;
          |$hql
        """.stripMargin
-    val cmd = makeBeelineCommand(effectiveHQL) :+ "--silent=true"
+    val cmd = makeBeelineCommand(effectiveHQL, taskName) :+ "--silent=true"
     val parser = new BeeLineReadParser(stdout)
     executeCmd(cmd, stdout = parser, stderr = stderr, obfuscate = Seq(7))
     parser.close()
@@ -43,7 +44,7 @@ class BeeLineInterface(beeline: String,
     if (printSQL)
       info(Util.prettyPrintAsciiBanner(hql, "query"))
     val effectiveHQL = s"set mapred.job.name = $taskName;\n" + hql
-    val cmd = makeBeelineCommand(effectiveHQL)
+    val cmd = makeBeelineCommand(effectiveHQL, taskName)
     val logParser = new BeeLineExecuteParser(stderr)
     val retCode = executeCmd(cmd, stdout = stdout ,stderr = logParser, obfuscate = Seq(7))
     logParser.close()
@@ -51,17 +52,26 @@ class BeeLineInterface(beeline: String,
     logParser.getData
   }
 
+  /**
+    * beeline execute command
+    * @param file
+    * @return
+    */
+  protected def command(file: File): Seq[String] = {
+    Seq(beeline, "-u", s""""${HiveServerDBInterface.makeUrl(connectionProfile)}"""",
+      "-n", s""""${connectionProfile.username}"""", "-p", s""""${connectionProfile.password}"""" ,"-f",
+      file.toPath.toString)
+  }
 
   /**
     *
     * @param hql hql query to be executed.
     * @return command to execute the hive query
     */
-  private[hive] def makeBeelineCommand(hql: String) = {
-    val file = TaskContext.getTaskFile("query.hql")
+  private[hive] def makeBeelineCommand(hql: String, taskName: String) = {
+    val file = TaskContext.getTaskFile("query.hql", taskName=Some(taskName))
     file <<= hql
-    Seq(beeline, "-u", s""""${HiveServerDBInterface.makeUrl(connectionProfile)}"""",
-      "-n", s""""${connectionProfile.username}"""", "-p", s""""${connectionProfile.password}"""" ,"-f", file.toPath.toString)
+    command(file)
   }
 
 }
