@@ -90,7 +90,7 @@ class   TPTLoadFromFileSpec extends TestSpec {
          |   location = "$location"
          | }
        """.stripMargin
-    val task = TPTLoadFromFile("test_job", config).asInstanceOf[TPTLoadFromFile]
+    val task = TPTLoadFromFile("test_job", config, ConfigFactory.empty()).asInstanceOf[TPTLoadFromFile]
     task.loadSetting.nullString must be (None)
     task.loadSetting.mode must be ("fastload")
     task.loadSetting.quotechar must be ('~')

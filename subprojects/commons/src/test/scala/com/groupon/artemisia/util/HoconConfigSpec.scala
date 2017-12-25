@@ -167,8 +167,8 @@ class HoconConfigSpec extends TestSpec {
          |   foo-file = ${this.getClass.getResource("/dummy_file.txt").getFile}
          | }
        """.stripMargin
-      config.asInlineOrFile("bar") must be ("bingo")
-      config.asInlineOrFile("foo") must be ("tango")
+      config.asInlineOrFile("bar", ConfigFactory.empty()) must be ("bingo")
+      config.asInlineOrFile("foo", ConfigFactory.empty()) must be ("tango")
   }
 
 

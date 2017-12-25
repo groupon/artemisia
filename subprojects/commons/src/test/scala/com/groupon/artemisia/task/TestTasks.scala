@@ -51,7 +51,7 @@ class TestAdderTask(name: String ,val num1: Int, val num2: Int, val result: Stri
 
 object TestAdderTask extends TaskLike {
 
-  override def apply(name: String, param: Config) = {
+  override def apply(name: String, param: Config, reference: Config) = {
     new TestAdderTask(name, param.as[Int]("num1"),param.as[Int]("num2"),param.as[String]("result_var"))
   }
 
@@ -82,7 +82,7 @@ class TestFailTask(name: String) extends Task(name) {
 
 object TestFailTask extends TaskLike {
 
-  override def apply(name: String, param: Config) = {
+  override def apply(name: String, param: Config, reference: Config) = {
     new TestFailTask(name)
   }
   override val taskName: String = "TestFailTask"

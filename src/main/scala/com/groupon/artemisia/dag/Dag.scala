@@ -548,7 +548,7 @@ object Dag {
       val task = component.dispatchTask(taskName, name, this.payload.as[Config](Keywords.Task.PARAMS) withFallback
         defaults.getOrElse(ConfigFactory.empty()), this.payload.getAs[Config](Keywords.Task.VARIABLES)
         .getOrElse(ConfigFactory.empty()).withFallback(appContext.payload))
-      new TaskHandler(TaskConfig(this.payload, appContext), task, this.payload.getAs[Config](Keywords.Task.ASSERTION)
+      new TaskHandler(TaskConfig(this.payload, appContext), task, this.payload.getAs[Config](Keywords.Task.VARIABLES)
         .getOrElse(ConfigFactory.empty()).withFallback(appContext.payload))
     }
 

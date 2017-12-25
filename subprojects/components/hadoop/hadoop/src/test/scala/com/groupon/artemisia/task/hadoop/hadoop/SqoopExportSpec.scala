@@ -87,7 +87,7 @@ import com.groupon.artemisia.util.TestUtils
       """.stripMargin
     }
 
-    val task = SqoopExport("task", config).asInstanceOf[SqoopExport]
+    val task = SqoopExport("task", config, ConfigFactory.empty()).asInstanceOf[SqoopExport]
     task.sqoopOption.queueName must be ("public")
     task.sqoopOption.splitBy must be (Some("col2"))
     task.sqoopOption.numMappers must be (10)

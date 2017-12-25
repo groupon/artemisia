@@ -127,7 +127,7 @@ class TDCHExtractSpec extends TestSpec {
          |    truncate = yes
          | }
          """.stripMargin
-    val task = TDCHExtract("tdch_test", config).asInstanceOf[TDCHExtract]
+    val task = TDCHExtract("tdch_test", config, ConfigFactory.empty()).asInstanceOf[TDCHExtract]
     task.dBConnection.password must be ("password")
     task.truncate mustBe true
     task.target must be ("/path/hdfs")

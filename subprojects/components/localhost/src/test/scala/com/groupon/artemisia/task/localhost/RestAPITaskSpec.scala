@@ -106,7 +106,7 @@ class RestAPITaskSpec extends TestSpec with BeforeAndAfterAll {
          |   allowed-status-codes = [105]
          | }
        """.stripMargin
-    val task = RestAPITask("test", config).asInstanceOf[RestAPITask]
+    val task = RestAPITask("test", config, ConfigFactory.empty()).asInstanceOf[RestAPITask]
     task.restEndPoint.url must be ("http://api.examples.com/post/json")
     task.restEndPoint.header must be (Seq("foo" -> "bar"))
     task.restEndPoint.method must be ("get")

@@ -61,7 +61,7 @@ class PGComponentSpec extends TestSpec {
          |}
 """.stripMargin
 
-    val task = component.dispatchTask("SQLRead", "sql_read", config).asInstanceOf[SQLRead]
+    val task = component.dispatchTask("SQLRead", "sql_read", config, ConfigFactory.empty()).asInstanceOf[SQLRead]
     task.sql must be ("SELECT * FROM table")
     task.connectionProfile.port must be (5432)
     task.connectionProfile.default_database must be ("db")
@@ -76,7 +76,8 @@ class PGComponentSpec extends TestSpec {
          |}
       """.stripMargin
 
-    val task: SQLExecute = component.dispatchTask("SQLExecute", "sql_read", config).asInstanceOf[SQLExecute]
+    val task: SQLExecute = component.dispatchTask("SQLExecute", "sql_read", config, ConfigFactory.empty())
+      .asInstanceOf[SQLExecute]
     task.sql must be ("SELECT * FROM table")
     task.connectionProfile.username must be ("user")
     task.connectionProfile.password must be ("pass")
@@ -99,7 +100,7 @@ class PGComponentSpec extends TestSpec {
          |}
       """.stripMargin
 
-    val task = component.dispatchTask("SQLLoad", "task", config).asInstanceOf[LoadFromFile]
+    val task = component.dispatchTask("SQLLoad", "task", config, ConfigFactory.empty()).asInstanceOf[LoadFromFile]
     task.tableName must be ("test_table")
     task.supportedModes must be === "default" :: "bulk" :: Nil
     task.loadSetting.delimiter must be ('\u0001')
@@ -122,7 +123,7 @@ class PGComponentSpec extends TestSpec {
          |}
       """.stripMargin
 
-    val task = component.dispatchTask("LoadFromHDFS", "task", config).asInstanceOf[LoadFromHDFS]
+    val task = component.dispatchTask("LoadFromHDFS", "task", config, ConfigFactory.empty()).asInstanceOf[LoadFromHDFS]
     task.tableName must be ("test_table")
     task.supportedModes must be === "default" :: "bulk" :: Nil
     task.loadSetting.delimiter must be ('\u0001')
@@ -142,7 +143,7 @@ class PGComponentSpec extends TestSpec {
          |    sql = "select * from dual"
          |  }
       """.stripMargin
-    val task = component.dispatchTask("SQLExport", "sql_read", config).asInstanceOf[ExportToFile]
+    val task = component.dispatchTask("SQLExport", "sql_read", config, ConfigFactory.empty()).asInstanceOf[ExportToFile]
     task.supportedModes must be === "default" :: "bulk" :: Nil
     task.sql must be ("select * from dual")
     task.exportSetting.delimiter must be ('\t')
@@ -164,7 +165,7 @@ class PGComponentSpec extends TestSpec {
          |    sql = "select * from dual"
          |  }
       """.stripMargin
-    val task = component.dispatchTask("ExportToHDFS", "sql_read", config).asInstanceOf[ExportToHDFS]
+    val task = component.dispatchTask("ExportToHDFS", "sql_read", config, ConfigFactory.empty()).asInstanceOf[ExportToHDFS]
     task.supportedModes must be === "default" :: "bulk" :: Nil
     task.sql must be ("select * from dual")
     task.exportSetting.delimiter must be ('\t')
@@ -188,7 +189,7 @@ class PGComponentSpec extends TestSpec {
          |  }
       """.stripMargin
     val ex = intercept[InvocationTargetException] {
-     component.dispatchTask("SQLExport", "sql_read", config).asInstanceOf[ExportToFile]
+     component.dispatchTask("SQLExport", "sql_read", config, ConfigFactory.empty()).asInstanceOf[ExportToFile]
     }
     ex.getTargetException.getMessage must be  ("mode 'unknown' is not supported")
   }

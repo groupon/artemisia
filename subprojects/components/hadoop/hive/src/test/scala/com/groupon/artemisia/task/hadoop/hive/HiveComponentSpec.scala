@@ -49,7 +49,7 @@ class HiveComponentSpec extends TestSpec {
          |  sql = "select * from table"
          | }
        """.stripMargin
-    val task = component.dispatchTask("HQLExecute", "task", config).asInstanceOf[HQLExecute]
+    val task = component.dispatchTask("HQLExecute", "task", config, ConfigFactory.empty()).asInstanceOf[HQLExecute]
     task.sql.head must be ("select * from table")
   }
 
@@ -67,7 +67,7 @@ class HiveComponentSpec extends TestSpec {
          |  sql = "select * from table"
          | }
        """.stripMargin
-    val task = component.dispatchTask("HQLRead", "task", config).asInstanceOf[HQLRead]
+    val task = component.dispatchTask("HQLRead", "task", config, ConfigFactory.empty()).asInstanceOf[HQLRead]
     task.sql must be ("select * from table")
     task.connectionProfile.hostname must be ("hiveserver")
     task.connectionProfile.password must be ("stark")
@@ -89,7 +89,7 @@ class HiveComponentSpec extends TestSpec {
          |  sql = "select * from table_export"
          | }
        """.stripMargin
-    val task = component.dispatchTask("HQLExport", "task", config).asInstanceOf[HQLExport]
+    val task = component.dispatchTask("HQLExport", "task", config, ConfigFactory.empty()).asInstanceOf[HQLExport]
     task.connectionProfile.default_database must be ("db")
     task.connectionProfile.port must be (1000)
     task.sql must be ("select * from table_export")

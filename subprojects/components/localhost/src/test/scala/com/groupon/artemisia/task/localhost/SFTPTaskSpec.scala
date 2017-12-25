@@ -102,7 +102,7 @@ class SFTPTaskSpec extends TestSpec with BeforeAndAfterAll {
             | }
          """.
            stripMargin
-         val task =  SFTPTask("sftptask", config).asInstanceOf[SFTPTask]
+         val task =  SFTPTask("sftptask", config, ConfigFactory.empty()).asInstanceOf[SFTPTask]
          task.connection.host must be("sftp-server")
          task.connection.port must be(2222)
          task.connection.password must be (Some("caria"))

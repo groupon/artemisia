@@ -96,7 +96,7 @@ class TPTLoadFromHDFSSpec extends TestSpec {
         |   }
         | }
       """.stripMargin
-    val task = TPTLoadFromHDFS("test_job", config).asInstanceOf[TPTLoadFromHDFS]
+    val task = TPTLoadFromHDFS("test_job", config, ConfigFactory.empty()).asInstanceOf[TPTLoadFromHDFS]
     task.loadSetting.nullString must be (None)
     task.loadSetting.mode must be ("fastload")
     task.loadSetting.quotechar must be ('~')

@@ -53,7 +53,7 @@ class CoreComponentSpec extends TestSpec {
           |  parse_output = no
           |}
         """.stripMargin
-      val task = component.dispatchTask(ScriptTask.taskName, "script", config)
+      val task = component.dispatchTask(ScriptTask.taskName, "script", config, ConfigFactory.empty())
       task mustBe a [ScriptTask]
   }
 
@@ -65,7 +65,7 @@ class CoreComponentSpec extends TestSpec {
         |  email = ${EmailTaskSpec.defaultEmailRequestConfig.root().render()}
         |}
       """.stripMargin
-    val task = component.dispatchTask(EmailTask.taskName, "email", config)
+    val task = component.dispatchTask(EmailTask.taskName, "email", config, ConfigFactory.empty())
     task mustBe a [EmailTask]
   }
 
@@ -85,7 +85,7 @@ class CoreComponentSpec extends TestSpec {
          |   allowed-status-codes = [105]
          | }
        """.stripMargin
-    val task = component.dispatchTask(RestAPITask.taskName, "test", config)
+    val task = component.dispatchTask(RestAPITask.taskName, "test", config, ConfigFactory.empty())
     task mustBe a [RestAPITask]
   }
 

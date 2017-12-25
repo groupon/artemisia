@@ -54,7 +54,7 @@ class HDFSTaskSpec extends TestSpec {
         |}
       """.stripMargin
     }
-    val task = HDFSTask("task", config).asInstanceOf[HDFSTask]
+    val task = HDFSTask("task", config, ConfigFactory.empty()).asInstanceOf[HDFSTask]
     task.hdfsBin must be (Some("/usr/local/bin/hdfs"))
     task.action must be ("copyFromLocal")
     task.arguments must contain theSameElementsInOrderAs Seq("/var/path/local/file.txt", "/usr/artemisia/hdfs/file.txt")

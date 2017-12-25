@@ -84,7 +84,7 @@ class TDCHLoadSpec extends TestSpec {
            |
            | }
          """.stripMargin
-    val task = TDCHLoad("tdch_test", config).asInstanceOf[TDCHLoad]
+    val task = TDCHLoad("tdch_test", config, ConfigFactory.empty()).asInstanceOf[TDCHLoad]
     task.dBConnection.username must be ("chlr")
     task.truncate mustBe true
     task.method must be ("batch.insert")
