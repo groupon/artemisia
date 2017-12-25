@@ -106,8 +106,9 @@ trait TaskLike extends BaseTaskLike {
     *
     * @param name a name for the task
     * @param config param config node
+    * @param reference reference config for config resolution
     */
-  def apply(name: String, config: Config): Task
+  def apply(name: String, config: Config, reference: Config): Task
 
 
 }

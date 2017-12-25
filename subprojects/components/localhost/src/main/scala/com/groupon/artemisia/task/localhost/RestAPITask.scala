@@ -255,7 +255,7 @@ object RestAPITask extends TaskLike {
     * @param name   a name for the task
     * @param config param config node
     */
-  override def apply(name: String, config: Config): Task = {
+  override def apply(name: String, config: Config, reference: Config): Task = {
     new RestAPITask(name
       , RestEndPoint(config.as[Config]("request"))
       , config.as[List[Int]]("allowed-status-codes")

@@ -63,11 +63,11 @@ trait ExportToHDFSHelper extends ExportTaskHelper {
 
 object ExportToHDFSHelper {
 
-  def create[T <: ExportToHDFS: ClassTag](name: String, config: Config): T = {
+  def create[T <: ExportToHDFS: ClassTag](name: String, config: Config, reference: Config): T = {
     val exportSettings = BasicExportSetting(config.as[Config]("export"))
     val connectionProfile = DBConnection.parseConnectionProfile(config.getValue("dsn"))
     val hdfs = HDFSWriteSetting(config.as[Config]("hdfs"))
-    val sql: String = config.asInlineOrFile("sql")
+    val sql: String = config.asInlineOrFile("sql", reference)
     implicitly[ClassTag[T]].runtimeClass.getConstructor(classOf[String], classOf[String], classOf[HDFSWriteSetting],
       classOf[DBConnection], classOf[ExportSetting])
       .newInstance(name, sql, hdfs, connectionProfile, exportSettings).asInstanceOf[T]

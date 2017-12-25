@@ -34,9 +34,10 @@ package com.groupon.artemisia.util
 
 import java.io.File
 import java.util.regex.Matcher
+
 import com.groupon.artemisia.inventory.exceptions.ConfigException
-import com.groupon.artemisia.task.TaskContext
 import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
+
 import scala.collection.JavaConverters._
 import scala.util.matching.Regex.Match
 
@@ -130,7 +131,7 @@ object HoconConfigEnhancer {
     result.mkString("\n")
   }
 
-  def readFileContent(file: File, reference: Config = TaskContext.payload): String = {
+  def readFileContent(file: File, reference: Config): String = {
     val content = scala.io.Source.fromFile(file).mkString
     resolveString(content,reference)
   }

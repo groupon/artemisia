@@ -53,7 +53,7 @@ class LoadFromHDFS(taskName: String, tableName: String, hdfsReadSetting: HDFSRea
 
 object LoadFromHDFS extends LoadFromHDFSHelper {
 
-  override def apply(name: String, config: Config): Task = LoadFromHDFSHelper.create[LoadFromHDFS](name, config)
+  override def apply(name: String, config: Config, reference: Config): Task = LoadFromHDFSHelper.create[LoadFromHDFS](name, config)
 
   override def defaultPort = 3306
 

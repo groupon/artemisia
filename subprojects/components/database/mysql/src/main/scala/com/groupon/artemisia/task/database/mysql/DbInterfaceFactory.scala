@@ -84,7 +84,7 @@ object DbInterfaceFactory {
 
   private def getConnection(connectionProfile: DBConnection) = {
     DriverManager.getConnection(s"jdbc:mysql://${connectionProfile.hostname}:${connectionProfile.port}/${connectionProfile.default_database}?" +
-      s"user=${connectionProfile.username}&password=${connectionProfile.password}")
+      s"user=${connectionProfile.username}&password=${connectionProfile.password}&allowMultiQueries=true")
   }
   
 }

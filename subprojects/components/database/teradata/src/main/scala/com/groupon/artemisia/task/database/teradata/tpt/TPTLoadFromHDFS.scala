@@ -99,7 +99,7 @@ object TPTLoadFromHDFS extends TPTTaskHelper {
     .withoutPath("location")
     .withValue("hdfs", HDFSReadSetting.structure.root())
 
-  override def apply(name: String, config: Config): Task = {
+  override def apply(name: String, config: Config, reference: Config): Task = {
     val connectionProfile = DBConnection.parseConnectionProfile(config.getValue("dsn"))
     val destinationTable = config.as[String]("destination-table")
     val loadSettings = TPTLoadSetting(config.as[Config]("load"))

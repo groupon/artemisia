@@ -82,7 +82,7 @@ trait LoadTaskHelper extends TaskLike {
   override def defaultConfig: Config = ConfigFactory.empty()
                                   .withValue("load", BasicLoadSetting.defaultConfig.root())
 
-  override def apply(name: String, config: Config): Task = ???
+  override def apply(name: String, config: Config, reference: Config): Task = ???
 
   override def paramConfigDoc: Config = {
     val config = ConfigFactory parseString

@@ -94,8 +94,8 @@ object HQLRead extends TaskLike {
 
   override val defaultConfig: Config = ConfigFactory.empty.withValue("mode", ConfigValueFactory.fromAnyRef("cli"))
 
-  override def apply(name: String, config: Config) = {
-    val sql = config.asInlineOrFile("sql")
+  override def apply(name: String, config: Config, reference: Config): HQLRead = {
+    val sql = config.asInlineOrFile("sql", reference)
     val connection = config.getAs[ConfigValue]("dsn") map DBConnection.parseConnectionProfile
     new HQLRead(name, sql, Mode(config.as[String]("mode")), connection)
   }

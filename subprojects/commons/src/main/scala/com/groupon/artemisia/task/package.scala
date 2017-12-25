@@ -20,7 +20,8 @@ package object task {
   implicit class TaskConverter(jTaskLike: JTaskLike) {
     def convert: TaskLike = {
       new TaskLike {
-        override def apply(name: String, config: Config): Task = jTaskLike.create(name, config)
+        override def apply(name: String, config: Config, reference: Config): Task =
+          jTaskLike.create(name, config, reference)
         override def fieldDefinition: Map[String, AnyRef] = Map() // TODO implemetation
         override def defaultConfig: Config = jTaskLike.defaultConfig
         override val taskName: String = jTaskLike.taskName

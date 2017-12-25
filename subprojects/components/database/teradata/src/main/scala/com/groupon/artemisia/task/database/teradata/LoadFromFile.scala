@@ -84,7 +84,7 @@ object LoadFromFile extends LoadTaskHelper {
 
   override val defaultConfig = ConfigFactory.empty().withValue("load", TeraLoadSetting.defaultConfig.root())
 
-  override def apply(name: String, config: Config) = {
+  override def apply(name: String, config: Config, reference: Config) = {
     val connectionProfile = DBConnection.parseConnectionProfile(config.getValue("dsn"))
     val destinationTable = config.as[String]("destination-table")
     val loadSettings = TeraLoadSetting(config.as[Config]("load"))

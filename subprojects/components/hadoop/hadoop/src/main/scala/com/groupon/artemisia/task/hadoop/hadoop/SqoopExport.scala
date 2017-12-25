@@ -205,7 +205,7 @@ object SqoopExport extends TaskLike {
     * @param name   a name for the task
     * @param config param config node
     */
-  override def apply(name: String, config: Config): Task = {
+  override def apply(name: String, config: Config, reference: Config): Task = {
     new SqoopExport(
       name,
       config.as[String]("connection.type").toLowerCase ->

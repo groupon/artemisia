@@ -53,7 +53,8 @@ class ExportToHDFS(taskName: String, sql: String, hdfsWriteSetting: HDFSWriteSet
 
 object ExportToHDFS extends ExportToHDFSHelper {
 
-  override def apply(name: String, config: Config): Task = ExportToHDFSHelper.create[ExportToHDFS](name, config)
+  override def apply(name: String, config: Config, reference: Config): Task = ExportToHDFSHelper
+    .create[ExportToHDFS](name, config, reference)
 
   override def supportedModes: Seq[String] = "default" :: "bulk" :: Nil
 

@@ -178,7 +178,7 @@ object TDCHExtract extends TaskLike {
     "tdch-setting" -> TDCHSetting.fieldDescription
   )
 
-  override def apply(name: String, config: Config): Task = {
+  override def apply(name: String, config: Config, reference: Config): Task = {
     new TDCHExtract(
       name,
       DBConnection.parseConnectionProfile(config.as[ConfigValue]("dsn")),

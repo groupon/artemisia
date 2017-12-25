@@ -68,8 +68,8 @@ object HQLExport extends ExportTaskHelper {
 
   override val defaultPort: Int = 10000
 
-  override def apply(name: String, config: Config): Task = {
-    database.ExportTaskHelper.create[HQLExport](name, config)
+  override def apply(name: String, config: Config, reference: Config): Task = {
+    database.ExportTaskHelper.create[HQLExport](name, config, reference)
   }
 }
 

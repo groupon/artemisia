@@ -65,7 +65,7 @@ class LoadFromFile(name: String = Util.getUUID, tableName: String, location: URI
 
 object LoadFromFile extends LoadTaskHelper {
 
-  override def apply(name: String, config: Config) = LoadTaskHelper.create[LoadFromFile](name, config)
+  override def apply(name: String, config: Config, reference: Config) = LoadTaskHelper.create[LoadFromFile](name, config)
 
   override def defaultPort = 3306
 

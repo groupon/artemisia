@@ -45,10 +45,10 @@ abstract class BaseComponent(val name: String) {
     * @param config HOCON config payload with configuration data for the task
     * @return an instance of [[Task]]
     */
-  final def dispatchTask(task: String, name: String, config: Config): Task = {
+  final def dispatchTask(task: String, name: String, config: Config, reference: Config): Task = {
     tasks.asScala.find(_.taskName == task) match {
-      case Some(x: TaskLike) => x.apply(name, composeDefaultConfig(x, config))
-      case Some(x: JTaskLike) => x.create(name, composeDefaultConfig(x, config))
+      case Some(x: TaskLike) => x.apply(name, composeDefaultConfig(x, config), reference)
+      case Some(x: JTaskLike) => x.create(name, composeDefaultConfig(x, config), reference)
       case _ => throw new UnKnownTaskException(s"unknown task $task in component $name")
     }
   }

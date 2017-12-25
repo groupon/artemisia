@@ -66,7 +66,8 @@ object SQLExecute extends TaskLike {
 
   override val defaultConfig: Config = ConfigFactory.empty()
 
-  override def apply(name: String, config: Config) = database.SQLExecute.create[SQLExecute](name, config)
+  override def apply(name: String, config: Config, reference: Config) = database.SQLExecute
+    .create[SQLExecute](name, config, reference)
 
   override val info = database.SQLExecute.info
 

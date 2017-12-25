@@ -146,7 +146,7 @@ object HDFSTask extends TaskLike {
     * @param name   a name for the task
     * @param config param config node
     */
-  override def apply(name: String, config: Config): Task = {
+  override def apply(name: String, config: Config, reference: Config): Task = {
     new HDFSTask(name
       ,config.as[String]("action")
       ,config.as[List[String]]("args")

@@ -75,7 +75,7 @@ object SFTPTask extends TaskLike {
   override val defaultConfig: Config = ConfigFactory.empty()
                 .withValue("connection", SFTPConnection.defaultConfig.root())
 
-  override def apply(name: String, config: Config): Task = {
+  override def apply(name: String, config: Config, reference: Config): Task = {
 
     def parseFileMapping(mode: String) = {
 

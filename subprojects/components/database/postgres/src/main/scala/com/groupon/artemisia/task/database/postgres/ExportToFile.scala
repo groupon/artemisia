@@ -60,7 +60,8 @@ class ExportToFile(name: String, sql: String, location: URI, connectionProfile: 
 
 object ExportToFile extends ExportTaskHelper {
 
-  override def apply(name: String,config: Config) = ExportTaskHelper.create[ExportToFile](name, config)
+  override def apply(name: String,config: Config, reference: Config): database.ExportToFile = ExportTaskHelper
+    .create[ExportToFile](name, config, reference)
 
   override val defaultPort = 5432
 

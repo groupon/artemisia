@@ -106,8 +106,8 @@ object SQLExecute {
   )
 
 
-  def create[T <: SQLExecute: ClassTag](name: String, config: Config) = {
-    val sql = config.asInlineOrFile("sql")
+  def create[T <: SQLExecute: ClassTag](name: String, config: Config, reference: Config) = {
+    val sql = config.asInlineOrFile("sql", reference)
     val connectionProfile = DBConnection.parseConnectionProfile(config.getValue("dsn"))
       implicitly[ClassTag[T]].runtimeClass.asSubclass(classOf[SQLExecute]).getConstructor(classOf[String],
         classOf[String], classOf[DBConnection]).newInstance(name, sql, connectionProfile)

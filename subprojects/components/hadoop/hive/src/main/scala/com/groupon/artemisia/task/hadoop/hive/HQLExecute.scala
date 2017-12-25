@@ -119,8 +119,8 @@ object HQLExecute extends TaskLike {
   "sql-file" -> "the file containing the queries. each query must be separated by a semicolon and new a line")
 
 
-  override def apply(name: String, config:  Config) = {
-    val sql = config.asInlineArrayOrFile("sql", s";${System.lineSeparator}")
+  override def apply(name: String, config:  Config, reference: Config) = {
+    val sql = config.asInlineArrayOrFile("sql", s";${System.lineSeparator}", reference)
     val connection = config.hasPath("dsn") match {
       case true => Some(DBConnection.parseConnectionProfile(config.getValue("dsn")))
       case false => None

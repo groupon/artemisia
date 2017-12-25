@@ -155,7 +155,7 @@ private[dag] class Dag(var graph: Seq[Node], checkpointData: CheckpointData) {
     */
   def getRunnableTasks(appContext: AppContext): Try[Seq[(String, Try[TaskHandler])]] = {
     def getTasks = for (node <- this.getRunnableNodes) yield {
-      node.name -> Try(node.getNodeTask(appContext.payload, appContext))
+      node.name -> Try(node.getNodeTask(appContext))
     }
     Try(editDag(appContext.payload)) match {
       case Success(x) => appContext.payload = x; Try(getTasks)
@@ -365,9 +365,9 @@ object Dag {
     */
   private[dag] def extractTaskNodes(config: Config): Map[String, Config] = {
     val data = config.root().asScala filterNot {
-      case (key, value) => key.startsWith("__") && key.endsWith("__")
+      case (key, _) => key.startsWith("__") && key.endsWith("__")
     } filter {
-      case (key, value) =>
+      case (_, value) =>
         value.valueType() == ConfigValueType.OBJECT
       case _ => false
     } filter {
@@ -536,19 +536,20 @@ object Dag {
 
     /**
       *
-      * @param referenceConfig
       * @param appContext
       * @return
       */
-    private[Dag] def getNodeTask(referenceConfig: Config, appContext: AppContext): TaskHandler = {
-      this.resolve(referenceConfig)
+    private[Dag] def getNodeTask(appContext: AppContext): TaskHandler = {
+      this.resolve(appContext.payload)
       val componentName = this.payload.as[String](Task.COMPONENT)
       val taskName = this.payload.as[String](Keywords.Task.TASK)
       val defaults = appContext.payload.getAs[Config](s""""${Keywords.Config.DEFAULTS}"."$componentName"."$taskName"""")
       val component = appContext.getComponent(componentName)
       val task = component.dispatchTask(taskName, name, this.payload.as[Config](Keywords.Task.PARAMS) withFallback
-        defaults.getOrElse(ConfigFactory.empty()))
-      new TaskHandler(TaskConfig(this.payload, appContext), task, referenceConfig)
+        defaults.getOrElse(ConfigFactory.empty()), this.payload.getAs[Config](Keywords.Task.VARIABLES)
+        .getOrElse(ConfigFactory.empty()).withFallback(appContext.payload))
+      new TaskHandler(TaskConfig(this.payload, appContext), task, this.payload.getAs[Config](Keywords.Task.ASSERTION)
+        .getOrElse(ConfigFactory.empty()).withFallback(appContext.payload))
     }
 
 
@@ -569,7 +570,6 @@ object Dag {
       // we exclude any special nodes like __worklet__, __defaults__ during resolution.
       val config = payload
         .withoutPath(Keywords.Task.ASSERTION)
-        .withoutPath(Keywords.Task.VARIABLES)
         .hardResolve(variables withFallback contextConfig)
       this.payload = assertions match {
         case Some(x) => config.withValue(Keywords.Task.ASSERTION, x)

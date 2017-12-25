@@ -227,7 +227,7 @@ object HoconConfigUtil {
       implicitly[ConfigReader[T]].read(config, key)
     }
 
-    def asInlineOrFile(key: String): String = {
+    def asInlineOrFile(key: String, reference: Config): String = {
       if (config.hasPath(key)) {
         // dont make it config.as[String] and if you do
         // module dependency of project artemisia with all the components
@@ -235,7 +235,7 @@ object HoconConfigUtil {
         HoconConfigEnhancer.stripLeadingWhitespaces(config.getString(key))
       }
       else if (config.hasPath(s"$key-file"))
-        HoconConfigEnhancer.readFileContent(new File(config.getString(s"$key-file")))
+        HoconConfigEnhancer.readFileContent(new File(config.getString(s"$key-file")), reference)
       else
         throw new SettingNotFoundException(s"key $key/$key-file was not found")
     }
@@ -251,7 +251,7 @@ object HoconConfigUtil {
       * @param separator
       * @return
       */
-    def asInlineArrayOrFile(key: String, separator: String): Seq[String] = {
+    def asInlineArrayOrFile(key: String, separator: String, reference: Config): Seq[String] = {
       if (config.hasPath(key)) {
         // dont make it config.as[String] and if you do
         // module dependency of project artemisia with all the components
@@ -264,7 +264,7 @@ object HoconConfigUtil {
         }
       }
       else if (config.hasPath(s"$key-file")) {
-        HoconConfigEnhancer.readFileContent(new File(config.getString(s"$key-file"))).split(separator).toSeq
+        HoconConfigEnhancer.readFileContent(new File(config.getString(s"$key-file")), reference).split(separator).toSeq
       }
        else throw new SettingNotFoundException(s"key $key/$key-file was not found")
     }

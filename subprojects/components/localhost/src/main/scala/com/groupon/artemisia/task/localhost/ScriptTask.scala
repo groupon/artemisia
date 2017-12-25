@@ -88,7 +88,7 @@ object ScriptTask extends TaskLike {
       | }
     """.stripMargin
 
-  override def apply(name: String, config: Config) = {
+  override def apply(name: String, config: Config, reference: Config) = {
     new ScriptTask (
       name
      ,script = config.as[String]("script")

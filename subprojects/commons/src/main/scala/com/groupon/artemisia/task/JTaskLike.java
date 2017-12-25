@@ -16,6 +16,6 @@ abstract public class JTaskLike extends BaseTaskLike {
 
     public Map<String, Object> fieldDefinition;
 
-    abstract public Task create(String name, Config config);
+    abstract public Task create(String name, Config config, Config reference);
 
 }

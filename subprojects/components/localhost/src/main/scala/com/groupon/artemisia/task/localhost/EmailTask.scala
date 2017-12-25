@@ -89,7 +89,7 @@ object EmailTask extends TaskLike {
     "email" -> EmailRequest.fieldDefinition
   )
 
-  override def apply(name: String, config: Config): Task = {
+  override def apply(name: String, config: Config, reference: Config): Task = {
     val emailConnection = if (config.hasPath("connection"))
       Some(EmailConnection.parseConnectionProfile(config.getValue("connection")))
     else

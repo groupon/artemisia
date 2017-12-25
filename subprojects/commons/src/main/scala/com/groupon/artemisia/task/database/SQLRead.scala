@@ -107,9 +107,9 @@ object SQLRead {
   )
 
 
-  def create[T <: SQLRead: ClassTag](name: String, config: Config) = {
+  def create[T <: SQLRead: ClassTag](name: String, config: Config, reference: Config) = {
     val connectionProfile = DBConnection.parseConnectionProfile(config.getValue("dsn"))
-    val sql = config.asInlineOrFile("sql")
+    val sql = config.asInlineOrFile("sql", reference)
     implicitly[ClassTag[T]].runtimeClass.asSubclass(classOf[SQLRead]).getConstructor(classOf[String], classOf[String]
     , classOf[DBConnection]).newInstance(name, sql, connectionProfile)
   }

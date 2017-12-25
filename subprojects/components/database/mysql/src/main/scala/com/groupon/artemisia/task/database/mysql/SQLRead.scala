@@ -54,7 +54,8 @@ object SQLRead extends TaskLike {
 
   override val info = database.SQLRead.info
 
-  override def apply(name: String, config: Config) = database.SQLRead.create[SQLRead](name, config)
+  override def apply(name: String, config: Config, reference: Config): database.SQLRead = database
+    .SQLRead.create[SQLRead](name, config, reference)
 
   override val desc: String = database.SQLRead.desc
 
