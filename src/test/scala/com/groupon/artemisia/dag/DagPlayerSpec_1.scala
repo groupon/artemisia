@@ -39,6 +39,7 @@ import com.groupon.artemisia.core.{AppContext, AppSetting}
 import com.groupon.artemisia.dag.Message.{TaskStats, _}
 import com.groupon.artemisia.task.{TaskHandler, TestAdderTask, TestFailTask}
 import com.groupon.artemisia.util.HoconConfigUtil.Handler
+
 import scala.concurrent.duration._
 
 /**
@@ -77,10 +78,8 @@ class DagPlayerSpec_1 extends ActorTestSpec {
         stats.taskOutput.as[Int]("tango") must be (30)
       }
     }
-
     info("Sending tick 1")
     dag_player ! Tick
-
     probe.validateAndRelay(workers) {
       case TaskWrapper("step2",task_handler: TaskHandler) => {
         task_handler.task mustBe a[TestAdderTask]

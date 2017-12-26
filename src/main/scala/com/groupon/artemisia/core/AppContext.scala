@@ -76,7 +76,8 @@ class AppContext(private val cmdLineParam: AppSetting) {
   // checkpointManager can be initialized only after working dir is initialized
   // and workdir can be initialized only after initial payload instance is initialized
 
-  protected def checkpointMgr = if (skipCheckpoints) new BasicCheckpointManager else new FileCheckPointManager(checkpointFile)
+  protected lazy val checkpointMgr: BasicCheckpointManager = if (skipCheckpoints) new BasicCheckpointManager else
+    new FileCheckPointManager(checkpointFile)
 
   payload = checkpointMgr.checkpoints.adhocPayload withFallback payload
   val componentMapper: Map[String, Component] = payload.asMap[String](s"${Keywords.Config.SETTINGS_SECTION}.components").map({
@@ -140,7 +141,7 @@ class AppContext(private val cmdLineParam: AppSetting) {
    */
   def commitCheckpoint(taskName: String, taskStats: TaskStats) = {
     checkpointMgr.save(taskName, taskStats)
-    payload = checkpointMgr.checkpoints.adhocPayload withFallback payload
+    payload = taskStats.taskOutput.withFallback(payload)
   }
 
   /**

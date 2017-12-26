@@ -242,7 +242,8 @@ object DagEditor {
     protected def iterationValue: (ConfigValue, Int, Boolean) = {
       val iterateValue: ConfigValue = node.payload.root.keySet.asScala.filterNot(_ == Keywords.Task.ITERATE)
         .foldLeft(node.payload)({ case (acc, key) => acc.withoutPath(key)})
-        .hardResolve(referenceConfig).as[ConfigValue](Keywords.Task.ITERATE)
+        .hardResolve(node.payload.getAs[Config](Keywords.Task.VARIABLES)
+          .getOrElse(ConfigFactory.empty()).withFallback(referenceConfig)).as[ConfigValue](Keywords.Task.ITERATE)
       iterateValue.valueType match {
         case ConfigValueType.STRING => (iterateValue, 1, false)
         case ConfigValueType.LIST => (iterateValue, 1, false)

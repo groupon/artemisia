@@ -37,9 +37,10 @@ import java.io.{File, FileNotFoundException}
 import com.groupon.artemisia.TestSpec
 import com.groupon.artemisia.core.BasicCheckpointManager.CheckpointData
 import com.groupon.artemisia.dag.Message.TaskStats
-import com.groupon.artemisia.dag.{Dag, Status}
+import com.groupon.artemisia.dag.{Dag, Status, TestUtils}
+import com.groupon.artemisia.task.TaskHandler
 import com.groupon.artemisia.util.FileSystemUtil
-import com.groupon.artemisia.util.FileSystemUtil.{FileEnhancer, withTempDirectory}
+import com.groupon.artemisia.util.FileSystemUtil.{FileEnhancer, withTempDirectory, withTempFile}
 import com.groupon.artemisia.util.HoconConfigUtil.Handler
 import com.typesafe.config.{Config, ConfigException, ConfigFactory}
 
@@ -186,7 +187,7 @@ class AppContextTestSpec extends TestSpec {
     val taskStats = TaskStats(startTime = "2017-01-01 12:00:00", endTime = "2017-01-01 12:00:00", status=Status.SUCCEEDED)
     val appContext = new AppContext(AppSetting(cmd=Some("run"),
       value = Some(this.getClass.getResource("/code/iteration_with_checkpoint.conf").getFile))) {
-      override protected def checkpointMgr =  new BasicCheckpointManager() {
+      override protected lazy val checkpointMgr =  new BasicCheckpointManager() {
         override private[core] def checkpoints = CheckpointData(ConfigFactory.empty(),
           Map("step1$1" -> taskStats, "step1$2" -> taskStats))
       }
@@ -194,6 +195,27 @@ class AppContextTestSpec extends TestSpec {
     val dag = Dag(appContext)
     dag.getRunnableTasks(appContext) match {
       case Success(Seq((x, Success(taskHandler)))) => x must be ("step1$3")
+    }
+  }
+
+
+  it must "apply checkpoints for workflow" in {
+    val taskStats = TaskStats(startTime = "2017-01-01 12:00:00", endTime = "2017-01-01 12:00:00",
+      status=Status.SUCCEEDED)
+    TestUtils.worklet_file_import(this.getClass.getResource("/code/multi_step_addition_job.conf").getFile)
+    withTempFile(fileName = "worklet_checkpoint_recover") {
+      file =>
+        file <<= TestUtils.worklet_file_import(this.getClass.getResource("/code/multi_step_addition_job.conf").getFile)
+        val appContext = new AppContext(AppSetting(cmd=Some("run"), value = Some(file.toPath.toString))) {
+          override protected lazy val checkpointMgr =  new BasicCheckpointManager() {
+            override private[core] def checkpoints = CheckpointData(ConfigFactory.parseString("{ tango =  10}"),
+              Map("task1" -> taskStats, "task2$step1" -> taskStats))
+          }
+        }
+        val dag = Dag(appContext)
+        dag.getRunnableTasks(appContext) match {
+          case Success(Seq(("task2$step2", Success(taskHandler: TaskHandler)))) => ()
+        }
     }
   }
 

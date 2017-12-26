@@ -325,7 +325,7 @@ private[dag] class Dag(var graph: Seq[Node], checkpointData: CheckpointData) {
       case _ if openNodes.isEmpty =>
         AppLogger error s"cyclic dependency detected in graph structure $unsorted_graph"
         throw new DagException("Cycles Detected in Dag")
-      case _ => topSort(unsorted_graph filterNot {
+      case _ => topSort (unsorted_graph filterNot {
         openNodes.contains
       }, sorted_graph ++ openNodes)
     }

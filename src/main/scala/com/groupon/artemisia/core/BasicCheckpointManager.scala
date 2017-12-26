@@ -32,8 +32,8 @@
 
 package com.groupon.artemisia.core
 
-import com.typesafe.config.{ConfigFactory, Config}
 import com.groupon.artemisia.dag.Message.TaskStats
+import com.typesafe.config.{Config, ConfigFactory}
 
 /**
  * Created by chlr on 5/23/16.
@@ -51,13 +51,12 @@ class BasicCheckpointManager {
   protected var taskStatRepo: Map[String,TaskStats] = Map()
 
   private[core] def save(taskName: String, taskStat: TaskStats) = {
-    adhocPayload = taskStat.taskOutput.withFallback(adhocPayload)
-    taskStatRepo = taskStatRepo + (taskName -> taskStat)
+    this.adhocPayload = taskStat.taskOutput.withFallback(this.adhocPayload)
+    this.taskStatRepo = this.taskStatRepo + (taskName -> taskStat)
   }
 
-  private[core] def checkpoints = {
-    BasicCheckpointManager.CheckpointData(adhocPayload, taskStatRepo)
-  }
+  private[core] def checkpoints = BasicCheckpointManager.CheckpointData(this.adhocPayload, this.taskStatRepo)
+
 
 }
 
