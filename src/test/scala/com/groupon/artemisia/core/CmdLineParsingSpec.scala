@@ -53,7 +53,7 @@ class CmdLineParsingSpec extends TestSpec {
     info("verifying value property")
     cmd_line_args.value.getOrElse("") must be ("/var/tmp")
     info("verifying workflow_id property")
-    cmd_line_args.run_id.getOrElse("") must be ("5f40e8c3-59c2-4548-8e51-71980c657bc0")
+    cmd_line_args.runId.getOrElse("") must be ("5f40e8c3-59c2-4548-8e51-71980c657bc0")
     info("verifying config property")
     cmd_line_args.config.getOrElse("") must be ("/home/user/config.yml")
     info("verifying context param")

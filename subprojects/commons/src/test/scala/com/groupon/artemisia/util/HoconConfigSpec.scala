@@ -33,7 +33,7 @@
 package com.groupon.artemisia.util
 
 import java.util.concurrent.TimeUnit
-import com.typesafe.config.{Config, ConfigFactory, ConfigRenderOptions}
+import com.typesafe.config.{Config, ConfigFactory, ConfigRenderOptions, ConfigValueFactory}
 import HoconConfigUtil.Handler
 import com.groupon.artemisia.TestSpec
 import scala.concurrent.duration.FiniteDuration
@@ -181,7 +181,8 @@ class HoconConfigSpec extends TestSpec {
          | }
        """.stripMargin
       config.asInlineOrFile("bar", ConfigFactory.empty()) must be ("bingo")
-      config.asInlineOrFile("foo", ConfigFactory.empty()) must be ("tango")
+      config.asInlineOrFile("foo",
+        ConfigFactory.empty.withValue("foo", ConfigValueFactory.fromAnyRef("bar"))) must be ("tango bar")
   }
 
 

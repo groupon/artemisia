@@ -1,1 +1,1 @@
-tango
+tango ${foo}

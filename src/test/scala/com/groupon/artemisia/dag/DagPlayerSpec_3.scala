@@ -174,8 +174,62 @@ class DagPlayerSpec_3 extends ActorTestSpec {
     }
   }
 
+  it must "support iteration with scala expression" in {
+    setUpArtifacts(this.getClass.getResource("/code/iteration_scala_expr.conf").getFile)
+    within(20000 millis) {
+      dag_player ! Tick
+      probe.validateAndRelay(workers) {
+        case TaskWrapper("step1$1", task_handler: TaskHandler) => {
+          task_handler.task mustBe a[TestAdderTask]
+        }
+      }
+      probe.validateAndRelay(dag_player) {
+        case TaskSucceeded("step1$1", stats: TaskStats) => {
+          stats.status must be(Status.SUCCEEDED)
+          stats.taskOutput.as[Int]("tango1") must be(3)
+        }
+      }
+
+      dag_player ! Tick
+      probe.validateAndRelay(workers) {
+        case TaskWrapper("step1$2", task_handler: TaskHandler) => {
+          task_handler.task mustBe a[TestAdderTask]
+        }
+      }
+      probe.validateAndRelay(dag_player) {
+        case TaskSucceeded("step1$2", stats: TaskStats) => {
+          stats.status must be(Status.SUCCEEDED)
+          stats.taskOutput.as[Int]("tango2") must be(3)
+        }
+      }
+
+      dag_player ! Tick
+      probe.validateAndRelay(workers) {
+        case TaskWrapper("step1$3", task_handler: TaskHandler) => {
+          task_handler.task mustBe a[TestAdderTask]
+        }
+      }
+      probe.validateAndRelay(dag_player) {
+        case TaskSucceeded("step1$3", stats: TaskStats) => {
+          stats.status must be(Status.SUCCEEDED)
+          stats.taskOutput.as[Int]("tango3") must be(3)
+        }
+      }
+    }
+  }
+
+
+  it must "apply checkpoints to iterations" in {
+    setUpArtifacts(this.getClass.getResource("/code/iteration_scala_expr.conf").getFile)
+    within(20000 millis) {
+
+    }
+
+  }
+
+
   def setUpArtifacts(code: String) = {
-    app_settings = AppSetting(value = Some(code),skip_checkpoints = true)
+    app_settings = AppSetting(value = Some(code),skipCheckpoints = true)
     app_context = new AppContext(app_settings)
     dag = Dag(app_context)
     dag_player = system.actorOf(Props(new DagPlayer(dag,app_context,probe.ref)))

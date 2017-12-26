@@ -133,7 +133,7 @@ class DagPlayerAllDependencies extends ActorTestSpec {
 
 
   def setUpArtifacts(code: String) = {
-    app_settings = AppSetting(value = Some(code), skip_checkpoints = true)
+    app_settings = AppSetting(value = Some(code), skipCheckpoints = true)
     app_context = new AppContext(app_settings)
     dag = Dag(app_context)
     dag_player = system.actorOf(Props(new DagPlayer(dag, app_context, probe.ref)))

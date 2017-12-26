@@ -55,9 +55,9 @@ import scala.concurrent.duration.FiniteDuration
 class AppContext(private val cmdLineParam: AppSetting) {
 
 
-  val skipCheckpoints: Boolean = cmdLineParam.skip_checkpoints
+  val skipCheckpoints: Boolean = cmdLineParam.skipCheckpoints
   val globalConfigFile: Option[String] = cmdLineParam.globalConfigFileRef
-  val runId: String = cmdLineParam.run_id.getOrElse(Util.getUUID)
+  val runId: String = cmdLineParam.runId.getOrElse(Util.getUUID)
 
   // Always keep the payload of Appcontext and its smaller cousin TaskContext in sync.
   // this is done by leveraging the setter of payload attribute
@@ -160,7 +160,7 @@ class AppContext(private val cmdLineParam: AppSetting) {
    */
   private[core] def computeWorkingDir = {
     val configAssigned  = payload.getAs[String]("__settings__.core.working_dir") map { FileSystemUtil.joinPath(_,runId) }
-    val cmdLineAssigned = cmdLineParam.working_dir
+    val cmdLineAssigned = cmdLineParam.workingDir
     val defaultAssigned = FileSystemUtil.joinPath(FileSystemUtil.baseDir.toString,runId)
     cmdLineAssigned.getOrElse(configAssigned.getOrElse(defaultAssigned))
   }

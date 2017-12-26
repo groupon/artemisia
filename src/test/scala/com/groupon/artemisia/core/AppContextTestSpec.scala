@@ -100,7 +100,7 @@ class AppContextTestSpec extends TestSpec {
     withTempDirectory("AppContextSpec") {
       workingDir => {
         val task_name = "dummy_task"
-        val cmd = AppContextTestSpec.defaultTestCmdLineParams.copy(working_dir = Some(workingDir.toString))
+        val cmd = AppContextTestSpec.defaultTestCmdLineParams.copy(workingDir = Some(workingDir.toString))
         val appContext = new AppContext(cmd)
         appContext.commitCheckpoint(task_name, AppContextTestSpec.getTaskStatsConfigObject)
         val checkpoint = ConfigFactory.parseFile(new File(FileSystemUtil.joinPath(workingDir.toString, "checkpoint.conf")))
@@ -137,7 +137,7 @@ class AppContextTestSpec extends TestSpec {
             |  }
             |}
           """.stripMargin
-        val cmd = AppContextTestSpec.defaultTestCmdLineParams.copy(working_dir = Some(workingDir.toString))
+        val cmd = AppContextTestSpec.defaultTestCmdLineParams.copy(workingDir = Some(workingDir.toString))
         val appContext = new AppContext(cmd)
         val task_stats = appContext.checkpoints.taskStatRepo(task_name)
         info("validating end_time")
@@ -150,7 +150,7 @@ class AppContextTestSpec extends TestSpec {
 
   it must "make working_dir is configurable from cmdline" in {
     val workingDir = "/var/tmp"
-    val cmdLineParam = AppContextTestSpec.defaultTestCmdLineParams.copy(working_dir = Some(workingDir))
+    val cmdLineParam = AppContextTestSpec.defaultTestCmdLineParams.copy(workingDir = Some(workingDir))
     val appContext = new AppContext(cmdLineParam)
     appContext.workingDir must be (workingDir)
   }
@@ -168,7 +168,7 @@ class AppContextTestSpec extends TestSpec {
             | Component = SomeDummyComponent
             |}
           """.stripMargin
-        val appSetting = AppSetting(cmd=Some("run"), value = Some(file.toString), run_id = Some(runID))
+        val appSetting = AppSetting(cmd=Some("run"), value = Some(file.toString), runId = Some(runID))
         info(appSetting.value.get)
         val appContext = new AppContext(appSetting)
         appContext.workingDir must be (FileSystemUtil.joinPath(workingDir,runID))
@@ -206,7 +206,7 @@ object AppContextTestSpec {
     val working_dir = None
     val globalConfigFileRef = Some(this.getClass.getResource("/global_config.conf").getFile)
     val cmd_line_params = AppSetting(cmd=Some("run"), value=code, context = context, config = job_config,
-      working_dir = working_dir, globalConfigFileRef = globalConfigFileRef)
+      workingDir = working_dir, globalConfigFileRef = globalConfigFileRef)
     cmd_line_params
 
   }

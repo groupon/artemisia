@@ -1,0 +1,1 @@
+SELECT * FROM dbc.tables WHERE col1 = '${foo}' AND col2 = '${hello}'
