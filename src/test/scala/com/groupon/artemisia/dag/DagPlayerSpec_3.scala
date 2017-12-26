@@ -35,10 +35,12 @@ package com.groupon.artemisia.dag
 import akka.actor.{ActorRef, Props}
 import akka.routing.RoundRobinPool
 import com.groupon.artemisia.ActorTestSpec
+import com.groupon.artemisia.core.BasicCheckpointManager.CheckpointData
 import com.groupon.artemisia.core.{AppContext, AppSetting}
 import com.groupon.artemisia.dag.Message._
 import com.groupon.artemisia.task.{TaskHandler, TestAdderTask}
 import com.groupon.artemisia.util.HoconConfigUtil.Handler
+
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
@@ -52,7 +54,7 @@ class DagPlayerSpec_3 extends ActorTestSpec {
   var app_settings: AppSetting = _
   var dag: Dag = _
   var dag_player: ActorRef = _
-  var app_context: AppContext = _
+  var appContext: AppContext = _
 
   override def beforeEach() = {
     workers = system.actorOf(RoundRobinPool(1).props(Props[Worker]))
@@ -219,20 +221,14 @@ class DagPlayerSpec_3 extends ActorTestSpec {
   }
 
 
-  it must "apply checkpoints to iterations" in {
-    setUpArtifacts(this.getClass.getResource("/code/iteration_scala_expr.conf").getFile)
-    within(20000 millis) {
-
-    }
-
-  }
 
 
-  def setUpArtifacts(code: String) = {
+
+  def setUpArtifacts(code: String, checkpoints: Option[CheckpointData]=None) = {
     app_settings = AppSetting(value = Some(code),skipCheckpoints = true)
-    app_context = new AppContext(app_settings)
-    dag = Dag(app_context)
-    dag_player = system.actorOf(Props(new DagPlayer(dag,app_context,probe.ref)))
+    appContext = new AppContext(app_settings)
+    dag = Dag(appContext)
+    dag_player = system.actorOf(Props(new DagPlayer(dag,appContext,probe.ref)))
   }
 
 }

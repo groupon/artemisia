@@ -57,13 +57,8 @@ object Message {
   case class TaskSucceeded(override val name: String, override val taskStats: TaskStats) extends
     TaskCompleted(name, taskStats)
 
-  case class TaskStats (
-                       startTime: String,
-                       endTime: String = null,
-                       status: Status.Value,
-                       attempts: Int = 1,
-                       taskOutput: Config = ConfigFactory.empty()
-                       ) extends Messageable {
+  case class TaskStats(startTime: String, endTime: String = null, status: Status.Value, attempts: Int = 1,
+                       taskOutput: Config = ConfigFactory.empty()) extends Messageable {
 
     def toConfig(task_name: String) = {
 

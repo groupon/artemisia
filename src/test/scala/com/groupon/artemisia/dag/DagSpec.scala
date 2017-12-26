@@ -30,7 +30,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-  package com.groupon.artemisia.dag
+package com.groupon.artemisia.dag
 
 import java.io.File
 

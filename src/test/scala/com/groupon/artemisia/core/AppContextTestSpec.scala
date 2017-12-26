@@ -33,12 +33,17 @@
 package com.groupon.artemisia.core
 
 import java.io.{File, FileNotFoundException}
-import com.typesafe.config.{Config, ConfigException, ConfigFactory}
+
 import com.groupon.artemisia.TestSpec
+import com.groupon.artemisia.core.BasicCheckpointManager.CheckpointData
 import com.groupon.artemisia.dag.Message.TaskStats
+import com.groupon.artemisia.dag.{Dag, Status}
 import com.groupon.artemisia.util.FileSystemUtil
 import com.groupon.artemisia.util.FileSystemUtil.{FileEnhancer, withTempDirectory}
 import com.groupon.artemisia.util.HoconConfigUtil.Handler
+import com.typesafe.config.{Config, ConfigException, ConfigFactory}
+
+import scala.util.Success
 
 
 /**
@@ -173,6 +178,22 @@ class AppContextTestSpec extends TestSpec {
         val appContext = new AppContext(appSetting)
         appContext.workingDir must be (FileSystemUtil.joinPath(workingDir,runID))
       }
+    }
+  }
+
+
+  it must "apply checkpoints to iterations" in {
+    val taskStats = TaskStats(startTime = "2017-01-01 12:00:00", endTime = "2017-01-01 12:00:00", status=Status.SUCCEEDED)
+    val appContext = new AppContext(AppSetting(cmd=Some("run"),
+      value = Some(this.getClass.getResource("/code/iteration_with_checkpoint.conf").getFile))) {
+      override protected def checkpointMgr =  new BasicCheckpointManager() {
+        override private[core] def checkpoints = CheckpointData(ConfigFactory.empty(),
+          Map("step1$1" -> taskStats, "step1$2" -> taskStats))
+      }
+    }
+    val dag = Dag(appContext)
+    dag.getRunnableTasks(appContext) match {
+      case Success(Seq((x, Success(taskHandler)))) => x must be ("step1$3")
     }
   }
 

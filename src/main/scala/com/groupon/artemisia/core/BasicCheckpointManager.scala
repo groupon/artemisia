@@ -51,7 +51,7 @@ class BasicCheckpointManager {
   protected var taskStatRepo: Map[String,TaskStats] = Map()
 
   private[core] def save(taskName: String, taskStat: TaskStats) = {
-    adhocPayload = taskStat.taskOutput withFallback adhocPayload
+    adhocPayload = taskStat.taskOutput.withFallback(adhocPayload)
     taskStatRepo = taskStatRepo + (taskName -> taskStat)
   }
 

@@ -169,7 +169,7 @@ private[dag] class Dag(var graph: Seq[Node], checkpointData: CheckpointData) {
     * leaf nodes of the graph.
     * leaf nodes are the nodes who dont have any children nodes
     */
-  def leafNodes = graph filterNot (x => graph.exists(_.allParents contains x))
+  def leafNodes: Seq[Node] = graph filterNot (x => graph.exists(_.allParents contains x))
 
 
   /**

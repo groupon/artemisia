@@ -80,6 +80,7 @@ class DagPlayer(val dag: Dag, appContext: AppContext, val router: ActorRef) exte
         dag.getRunnableTasks(appContext) match {
           case Success(tasks) => processNodes(tasks)
           case Failure(th) =>
+            th.printStackTrace(System.err)
             error("Dag processor has crashed due to an error", th)
             dag.nodesWithStatus(Status.READY).foreach(x => dag.setNodeStatus(x.name, Status.INIT_FAILED))
             context.become(preReceive andThen (woundedDag orElse onTaskComplete))
@@ -98,6 +99,7 @@ class DagPlayer(val dag: Dag, appContext: AppContext, val router: ActorRef) exte
           router ! TaskWrapper(taskName, taskHandler)
           dag.setNodeStatus(taskName, Status.RUNNING)
         case (taskName, Failure(th)) =>
+          th.printStackTrace(System.err)
           error(s"node $taskName failed to initialize due to following error", th)
           dag.setNodeStatus(taskName, Status.INIT_FAILED)
           context.become(preReceive andThen (woundedDag orElse onTaskComplete))
